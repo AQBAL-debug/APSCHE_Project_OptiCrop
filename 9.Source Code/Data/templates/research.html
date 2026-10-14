@@ -1,0 +1,366 @@
+{% extends 'base.html' %}
+
+{% block title %}Scenario 3: Agricultural Research & Policy Dashboard - OptiCrop{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
+        <div>
+            <span class="badge bg-warning text-dark px-3 py-1 rounded-pill mb-1 fw-bold">
+                <i class="fa-solid fa-chart-line me-1"></i> Scenario 3
+            </span>
+            <h2 class="fw-bold mb-1">Agricultural Research & Policy Planning Dashboard</h2>
+            <p class="text-muted mb-0">Empirical analysis of crop-environment relationships, model feature importance, and agro-climatic zoning insights.</p>
+        </div>
+        <div class="mt-2 mt-md-0">
+            <a href="{{ url_for('dataset_view') }}" class="btn btn-outline-success rounded-pill px-3">
+                <i class="fa-solid fa-database me-1"></i> Explore Full Dataset
+            </a>
+        </div>
+    </div>
+
+    <!-- KPI Metric Cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small text-uppercase fw-semibold">Model Accuracy</div>
+                        <h3 class="fw-bold text-success mb-0">99.55%</h3>
+                        <small class="text-muted">Random Forest Classifier</small>
+                    </div>
+                    <div class="p-3 bg-success-subtle rounded-circle text-success fs-3">
+                        <i class="fa-solid fa-award"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small text-uppercase fw-semibold">Cross-Validation</div>
+                        <h3 class="fw-bold text-primary mb-0">99.32%</h3>
+                        <small class="text-muted">5-Fold Stratified CV (±0.85%)</small>
+                    </div>
+                    <div class="p-3 bg-primary-subtle rounded-circle text-primary fs-3">
+                        <i class="fa-solid fa-arrows-split-up-and-left"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small text-uppercase fw-semibold">Dataset Records</div>
+                        <h3 class="fw-bold text-dark mb-0">2,200</h3>
+                        <small class="text-muted">100 Samples / Crop (Balanced)</small>
+                    </div>
+                    <div class="p-3 bg-secondary-subtle rounded-circle text-secondary fs-3">
+                        <i class="fa-solid fa-table-list"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <div class="text-muted small text-uppercase fw-semibold">Agronomic Features</div>
+                        <h3 class="fw-bold text-warning mb-0">7 Factors</h3>
+                        <small class="text-muted">Chemical & Meteorological</small>
+                    </div>
+                    <div class="p-3 bg-warning-subtle rounded-circle text-warning fs-3">
+                        <i class="fa-solid fa-vials"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row g-4 mb-4">
+        <!-- Feature Importance Chart -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="fa-solid fa-chart-column text-success me-2"></i> ML Feature Importance Ranking
+                    </h5>
+                    <span class="badge bg-light text-muted border">Gini Impurity</span>
+                </div>
+                <p class="text-muted small mb-3">
+                    Relative contribution of each environmental parameter in determining the optimal crop classification.
+                </p>
+                <div style="position: relative; height: 320px;">
+                    <canvas id="featureImportanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Crop Distribution -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="fa-solid fa-pie-chart text-primary me-2"></i> Crop Category Representation
+                    </h5>
+                    <span class="badge bg-light text-muted border">22 Crop Classes</span>
+                </div>
+                <p class="text-muted small mb-3">
+                    Distribution of crops categorized by agricultural classification (Cereals, Pulses, Fruits, Cash Crops).
+                </p>
+                <div style="position: relative; height: 320px;">
+                    <canvas id="cropCategoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Environmental Correlation Matrix Heatmap Table -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+        <h5 class="fw-bold mb-2 text-dark">
+            <i class="fa-solid fa-table-cells-large text-warning me-2"></i> Environmental Factor Correlation Matrix
+        </h5>
+        <p class="text-muted small mb-3">
+            Pearson correlation coefficients demonstrating interactions between soil nutrients (N, P, K) and environmental parameters.
+        </p>
+        <div class="table-responsive">
+            <table class="table table-bordered text-center align-middle font-monospace mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Nitrogen (N)</th>
+                        <th>Phosphorus (P)</th>
+                        <th>Potassium (K)</th>
+                        <th>Temperature</th>
+                        <th>Humidity</th>
+                        <th>pH</th>
+                        <th>Rainfall</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th class="table-light text-start">Nitrogen (N)</th>
+                        <td class="bg-success text-white fw-bold">1.00</td>
+                        <td>-0.23</td>
+                        <td>-0.14</td>
+                        <td>0.03</td>
+                        <td>0.19</td>
+                        <td>0.09</td>
+                        <td>0.06</td>
+                    </tr>
+                    <tr>
+                        <th class="table-light text-start">Phosphorus (P)</th>
+                        <td>-0.23</td>
+                        <td class="bg-success text-white fw-bold">1.00</td>
+                        <td class="bg-warning-subtle fw-bold text-dark">0.74</td>
+                        <td>-0.13</td>
+                        <td>-0.12</td>
+                        <td>-0.14</td>
+                        <td>-0.06</td>
+                    </tr>
+                    <tr>
+                        <th class="table-light text-start">Potassium (K)</th>
+                        <td>-0.14</td>
+                        <td class="bg-warning-subtle fw-bold text-dark">0.74</td>
+                        <td class="bg-success text-white fw-bold">1.00</td>
+                        <td>-0.16</td>
+                        <td>0.19</td>
+                        <td>-0.17</td>
+                        <td>-0.05</td>
+                    </tr>
+                    <tr>
+                        <th class="table-light text-start">Temperature</th>
+                        <td>0.03</td>
+                        <td>-0.13</td>
+                        <td>-0.16</td>
+                        <td class="bg-success text-white fw-bold">1.00</td>
+                        <td>0.21</td>
+                        <td>-0.02</td>
+                        <td>-0.03</td>
+                    </tr>
+                    <tr>
+                        <th class="table-light text-start">Humidity</th>
+                        <td>0.19</td>
+                        <td>-0.12</td>
+                        <td>0.19</td>
+                        <td>0.21</td>
+                        <td class="bg-success text-white fw-bold">1.00</td>
+                        <td>-0.01</td>
+                        <td>0.09</td>
+                    </tr>
+                    <tr>
+                        <th class="table-light text-start">Soil pH</th>
+                        <td>0.09</td>
+                        <td>-0.14</td>
+                        <td>-0.17</td>
+                        <td>-0.02</td>
+                        <td>-0.01</td>
+                        <td class="bg-success text-white fw-bold">1.00</td>
+                        <td>-0.11</td>
+                    </tr>
+                    <tr>
+                        <th class="table-light text-start">Rainfall</th>
+                        <td>0.06</td>
+                        <td>-0.06</td>
+                        <td>-0.05</td>
+                        <td>-0.03</td>
+                        <td>0.09</td>
+                        <td>-0.11</td>
+                        <td class="bg-success text-white fw-bold">1.00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="mt-2 text-muted small">
+            <i class="fa-solid fa-circle-info me-1"></i> Key Observation: Strong positive correlation (<strong>r = 0.74</strong>) between Soil Phosphorus (P) and Potassium (K) indicates coupled demand in specific perennial fruit crops (e.g. Apple, Grapes).
+        </div>
+    </div>
+
+    <!-- Policy Planning & Agro-Climatic Zoning -->
+    <div class="row g-4">
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <h5 class="fw-bold mb-3 text-dark">
+                    <i class="fa-solid fa-earth-americas text-primary me-2"></i> Agro-Climatic Zoning Recommendations
+                </h5>
+                <div class="list-group list-group-flush">
+                    <div class="list-group-item px-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="fw-bold mb-0 text-success">Zone 1: Wetland & High-Rainfall Belts (> 180mm)</h6>
+                            <span class="badge bg-success-subtle text-success">Coastal / Delta</span>
+                        </div>
+                        <p class="text-muted small mb-1">
+                            Recommended Crops: <strong>Rice, Jute, Coconut</strong>. Characterized by high moisture content (>80%) and high water requirements.
+                        </p>
+                        <small class="text-secondary"><i class="fa-solid fa-lightbulb text-warning me-1"></i> Policy Note: Prioritize flood drainage infrastructure and subsidized bio-fungicides.</small>
+                    </div>
+
+                    <div class="list-group-item px-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="fw-bold mb-0 text-warning">Zone 2: Semi-Arid & Low Rainfall Belts (< 80mm)</h6>
+                            <span class="badge bg-warning-subtle text-dark">Dryland</span>
+                        </div>
+                        <p class="text-muted small mb-1">
+                            Recommended Crops: <strong>Chickpea, Lentil, Mothbeans, Mungbean, Muskmelon, Watermelon</strong>.
+                        </p>
+                        <small class="text-secondary"><i class="fa-solid fa-lightbulb text-warning me-1"></i> Policy Note: Subsidize drip irrigation systems, promote drought-tolerant pulses to conserve groundwater.</small>
+                    </div>
+
+                    <div class="list-group-item px-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="fw-bold mb-0 text-primary">Zone 3: High Nutrient Cash Crop Belts</h6>
+                            <span class="badge bg-primary-subtle text-primary">Intensive Agriculture</span>
+                        </div>
+                        <p class="text-muted small mb-1">
+                            Recommended Crops: <strong>Cotton, Coffee, Maize, Banana</strong>. Requires high Nitrogen (>100) and balanced potassium levels.
+                        </p>
+                        <small class="text-secondary"><i class="fa-solid fa-lightbulb text-warning me-1"></i> Policy Note: Promote precision soil testing labs and tailored NPK fertilizer blends.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <h5 class="fw-bold mb-3 text-dark">
+                    <i class="fa-solid fa-building-columns text-success me-2"></i> Evidence-Based Policy Action Plan
+                </h5>
+                <p class="text-muted small">
+                    Actionable strategies derived from model inferences for agricultural university extensions and government agriculture departments:
+                </p>
+                <div class="d-flex align-items-start mb-3">
+                    <div class="p-2 bg-success-subtle text-success rounded-circle me-3 mt-1">
+                        <i class="fa-solid fa-1"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Nutrient Optimization & Subsidy Rebalancing</h6>
+                        <p class="text-muted small mb-0">Feature importance analysis proves rainfall (23%) and humidity (22%) dominate crop suitability over excessive nitrogen. Subsidies should pivot from blanket urea distribution to balanced soil conditioner grants.</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-start mb-3">
+                    <div class="p-2 bg-primary-subtle text-primary rounded-circle me-3 mt-1">
+                        <i class="fa-solid fa-2"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Crop Diversification Campaigns</h6>
+                        <p class="text-muted small mb-0">Utilize OptiCrop's top alternative crop recommendations to promote pulse cultivation (blackgram, lentil, mungbean) in rotation with cereals, naturally rejuvenating soil nitrogen.</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-start">
+                    <div class="p-2 bg-warning-subtle text-dark rounded-circle me-3 mt-1">
+                        <i class="fa-solid fa-3"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold mb-1">Climate Resilience Early Warning</h6>
+                        <p class="text-muted small mb-0">During forecasted drought seasons, policy advisories can proactively guide farmers away from high-water crops toward drought-tolerant horticultural varieties.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // 1. Feature Importance Chart
+    const ctxFI = document.getElementById('featureImportanceChart').getContext('2d');
+    new Chart(ctxFI, {
+        type: 'bar',
+        data: {
+            labels: ['Rainfall (23.0%)', 'Humidity (22.4%)', 'Potassium K (17.5%)', 'Phosphorus P (15.1%)', 'Nitrogen N (9.6%)', 'Temperature (7.2%)', 'Soil pH (5.1%)'],
+            datasets: [{
+                label: 'Feature Importance',
+                data: [0.2301, 0.2242, 0.1754, 0.1508, 0.0964, 0.0724, 0.0506],
+                backgroundColor: [
+                    '#3b82f6', '#06b6d4', '#f59e0b', '#8b5cf6', '#10b981', '#ef4444', '#6b7280'
+                ],
+                borderRadius: 6
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(v) { return (v * 100).toFixed(0) + '%'; }
+                    }
+                }
+            }
+        }
+    });
+
+    // 2. Crop Category Representation
+    const ctxCat = document.getElementById('cropCategoryChart').getContext('2d');
+    new Chart(ctxCat, {
+        type: 'doughnut',
+        data: {
+            labels: ['Fruits (8)', 'Pulses & Legumes (6)', 'Cash & Plantation (5)', 'Cereals (3)'],
+            datasets: [{
+                data: [800, 600, 500, 300],
+                backgroundColor: ['#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

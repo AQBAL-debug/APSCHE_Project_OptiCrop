@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile - OptiCrop{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="rounded-circle bg-success-subtle text-success p-4 fs-2 me-3">
+                        <i class="fa-solid fa-user-gear"></i>
+                    </div>
+                    <div>
+                        <h4 class="fw-bold mb-0">{{ user.full_name or user.username }}</h4>
+                        <span class="badge bg-success text-uppercase">{{ user.role }}</span>
+                        <div class="text-muted small mt-1"><i class="fa-solid fa-calendar me-1"></i> Member since {{ user.created_at[:10] }}</div>
+                    </div>
+                </div>
+
+                <div class="list-group list-group-flush mb-4">
+                    <div class="list-group-item px-0 py-2 d-flex justify-content-between">
+                        <span class="text-muted">Username</span>
+                        <strong>@{{ user.username }}</strong>
+                    </div>
+                    <div class="list-group-item px-0 py-2 d-flex justify-content-between">
+                        <span class="text-muted">Email</span>
+                        <strong>{{ user.email }}</strong>
+                    </div>
+                    <div class="list-group-item px-0 py-2 d-flex justify-content-between">
+                        <span class="text-muted">Total Crop Recommendations</span>
+                        <span class="badge bg-primary rounded-pill">{{ user_preds_count }}</span>
+                    </div>
+                    <div class="list-group-item px-0 py-2 d-flex justify-content-between">
+                        <span class="text-muted">Suitability Checks</span>
+                        <span class="badge bg-secondary rounded-pill">{{ user_suits_count }}</span>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('history') }}" class="btn btn-outline-success rounded-pill flex-grow-1">
+                        <i class="fa-solid fa-clock-rotate-left me-1"></i> View My History
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline-danger rounded-pill">
+                        <i class="fa-solid fa-arrow-right-from-bracket me-1"></i> Sign Out
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

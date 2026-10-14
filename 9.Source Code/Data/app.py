@@ -1,382 +1,472 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.graph_objects as go
-import plotly.express as px
 import os
 import sys
+import json
+import csv
+import io
+from flask import (
+    Flask, render_template, request, redirect, url_for, 
+    flash, session, jsonify, Response, send_file
+)
+import pandas as pd
 
-# Add src directory to path
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+# Add src to path
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(BASE_DIR, 'src'))
 
-# Auto-train model if it doesn't exist
-@st.cache_resource
-def ensure_model_exists():
-    """Ensure model and data exist, train if necessary"""
-    model_dir = os.path.join(os.path.dirname(__file__), 'models')
-    data_dir = os.path.join(os.path.dirname(__file__), 'data')
-    data_path = os.path.join(data_dir, 'crop_recommendation.csv')
-    
-    # Create directories
-    os.makedirs(model_dir, exist_ok=True)
-    os.makedirs(data_dir, exist_ok=True)
-    
-    # Check if model exists
-    model_path = os.path.join(model_dir, 'crop_recommendation_model.pkl')
-    if not os.path.exists(model_path):
-        st.info("Training model for first use... This may take a minute.")
-        from data_preprocessing import DataPreprocessor
-        from model_training import ModelTrainer
-        
-        # Download dataset if not exists
-        if not os.path.exists(data_path):
-            try:
-                import kagglehub
-                st.info("Downloading dataset from Kaggle...")
-                path = kagglehub.dataset_download('atharvaingle/crop-recommendation-dataset')
-                import shutil
-                shutil.copy(f'{path}/Crop_recommendation.csv', data_path)
-            except:
-                st.error("Could not download dataset. Please ensure kagglehub is installed.")
-                return False
-        
-        # Train model
-        preprocessor = DataPreprocessor(data_path)
-        X_train_scaled, X_test_scaled, y_train, y_test, scaler, label_encoder = preprocessor.preprocess_pipeline()
-        preprocessor.save_preprocessors(model_dir)
-        
-        trainer = ModelTrainer(model_dir)
-        feature_names = ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall']
-        trainer.training_pipeline(X_train_scaled, X_test_scaled, y_train, y_test, label_encoder, feature_names)
-        
-        st.success("Model trained successfully!")
-    
-    return True
-
-# Ensure model exists before loading
-if ensure_model_exists():
-    from crop_recommendation import CropRecommendationSystem
-
-# Page configuration
-st.set_page_config(
-    page_title="OptiCrop - Smart Agricultural Production Optimization",
-    page_icon="🌾",
-    layout="wide",
-    initial_sidebar_state="expanded"
+from crop_recommendation import CropRecommendationSystem
+from database import (
+    init_db, register_user, authenticate_user, get_user_by_id,
+    save_prediction, get_predictions_by_user, get_prediction_by_id,
+    save_suitability_assessment, get_suitability_history,
+    save_feedback, get_all_feedback, get_system_stats
 )
 
-# Custom CSS
-st.markdown("""
-<style>
-    .main-header {
-        font-size: 3rem;
-        font-weight: bold;
-        color: #2E8B57;
-        text-align: center;
-        margin-bottom: 1rem;
-    }
-    .sub-header {
-        font-size: 1.5rem;
-        color: #556B2F;
-        margin-bottom: 1rem;
-    }
-    .metric-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 1.5rem;
-        border-radius: 10px;
-        color: white;
-        margin: 0.5rem 0;
-    }
-    .success-box {
-        background-color: #d4edda;
-        border: 1px solid #c3e6cb;
-        color: #155724;
-        padding: 1rem;
-        border-radius: 5px;
-        margin: 1rem 0;
-    }
-    .warning-box {
-        background-color: #fff3cd;
-        border: 1px solid #ffeaa7;
-        color: #856404;
-        padding: 1rem;
-        border-radius: 5px;
-        margin: 1rem 0;
-    }
-</style>
-""", unsafe_allow_html=True)
+app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'opticrop-super-secure-production-key-2026')
 
-# Initialize the recommendation system
-@st.cache_resource
-def load_system():
-    model_dir = os.path.join(os.path.dirname(__file__), 'models')
-    return CropRecommendationSystem(model_dir)
+# Initialize DB
+init_db()
+
+# Initialize ML system
+MODEL_DIR = os.path.join(BASE_DIR, 'models')
+DATA_PATH = os.path.join(BASE_DIR, 'data', 'crop_recommendation.csv')
 
 try:
-    system = load_system()
+    system = CropRecommendationSystem(MODEL_DIR)
 except Exception as e:
-    st.error(f"Error loading the model. Please ensure the model is trained first. Error: {e}")
-    st.stop()
+    print(f"Warning: Model could not be loaded immediately: {e}")
+    system = None
 
-# Main title
-st.markdown('<h1 class="main-header">🌾 OptiCrop</h1>', unsafe_allow_html=True)
-st.markdown('<p style="text-align: center; font-size: 1.2rem; color: #666;">Smart Agricultural Production Optimization Engine</p>', unsafe_allow_html=True)
+# Validation helper
+def validate_crop_inputs(n, p, k, temperature, humidity, ph, rainfall):
+    """Validate environmental input ranges (FT-03 / ST-02)"""
+    errors = []
+    try:
+        n = float(n)
+        if not (0 <= n <= 140):
+            errors.append("Nitrogen (N) must be between 0 and 140.")
+    except (ValueError, TypeError):
+        errors.append("Nitrogen (N) must be a valid number.")
 
-# Sidebar navigation
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Select Scenario", [
-    "🌱 Smart Crop Recommendation",
-    "🔍 Crop Suitability Assessment",
-    "📊 Agricultural Research Dashboard"
-])
+    try:
+        p = float(p)
+        if not (5 <= p <= 145):
+            errors.append("Phosphorus (P) must be between 5 and 145.")
+    except (ValueError, TypeError):
+        errors.append("Phosphorus (P) must be a valid number.")
 
-# Common input function
-def get_environmental_inputs():
-    """Get environmental inputs from user"""
-    st.subheader("Environmental Parameters")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        N = st.slider("Nitrogen (N)", 0, 140, 90, help="Nitrogen content ratio in soil")
-        P = st.slider("Phosphorus (P)", 5, 145, 42, help="Phosphorus content ratio in soil")
-        K = st.slider("Potassium (K)", 5, 205, 43, help="Potassium content ratio in soil")
-        temperature = st.slider("Temperature (°C)", 0.0, 45.0, 20.88, 0.01, help="Soil temperature")
-    
-    with col2:
-        humidity = st.slider("Humidity (%)", 10.0, 100.0, 82.00, 0.01, help="Relative humidity")
-        ph = st.slider("Soil pH", 3.5, 9.5, 6.50, 0.01, help="Soil pH level")
-        rainfall = st.slider("Rainfall (mm)", 20.0, 300.0, 202.94, 0.01, help="Annual rainfall")
-    
-    return N, P, K, temperature, humidity, ph, rainfall
+    try:
+        k = float(k)
+        if not (5 <= k <= 205):
+            errors.append("Potassium (K) must be between 5 and 205.")
+    except (ValueError, TypeError):
+        errors.append("Potassium (K) must be a valid number.")
+
+    try:
+        temperature = float(temperature)
+        if not (0 <= temperature <= 45):
+            errors.append("Temperature must be between 0°C and 45°C.")
+    except (ValueError, TypeError):
+        errors.append("Temperature must be a valid number.")
+
+    try:
+        humidity = float(humidity)
+        if not (10 <= humidity <= 100):
+            errors.append("Humidity must be between 10% and 100%.")
+    except (ValueError, TypeError):
+        errors.append("Humidity must be a valid number.")
+
+    try:
+        ph = float(ph)
+        if not (3.5 <= ph <= 9.5):
+            errors.append("Soil pH must be between 3.5 and 9.5.")
+    except (ValueError, TypeError):
+        errors.append("Soil pH must be a valid number.")
+
+    try:
+        rainfall = float(rainfall)
+        if not (20 <= rainfall <= 300):
+            errors.append("Rainfall must be between 20 mm and 300 mm.")
+    except (ValueError, TypeError):
+        errors.append("Rainfall must be a valid number.")
+
+    return len(errors) == 0, errors
+
+# --- Routes ---
+
+@app.route('/')
+def index():
+    """Home landing page"""
+    stats = get_system_stats()
+    return render_template('index.html', stats=stats)
 
 # Scenario 1: Smart Crop Recommendation
-if page == "🌱 Smart Crop Recommendation":
-    st.markdown('<h2 class="sub-header">Smart Crop Recommendation for Farmers</h2>', unsafe_allow_html=True)
-    
-    st.write("""
-    Enter your soil and environmental details below to get personalized crop recommendations 
-    for maximum yield and better farming efficiency.
-    """)
-    
-    N, P, K, temperature, humidity, ph, rainfall = get_environmental_inputs()
-    
-    if st.button("🔮 Get Crop Recommendation", type="primary"):
-        with st.spinner("Analyzing your soil conditions..."):
-            result = system.predict_crop(N, P, K, temperature, humidity, ph, rainfall)
-        
-        # Display main recommendation
-        st.markdown(f'<div class="success-box">', unsafe_allow_html=True)
-        st.markdown(f"### 🎯 Recommended Crop: **{result['recommended_crop'].upper()}**")
-        st.markdown(f"**Confidence Level:** {result['confidence']:.1%}")
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        # Display top 3 recommendations
-        st.subheader("Top 3 Crop Recommendations")
-        
-        cols = st.columns(3)
-        for i, (col, rec) in enumerate(zip(cols, result['top_3_recommendations']), 1):
-            with col:
-                st.metric(
-                    label=f"Option {i}",
-                    value=rec['crop'],
-                    delta=f"{rec['probability']:.1%}"
-                )
-        
-        # Environmental analysis
-        st.subheader("Environmental Factor Analysis")
-        analysis = system.analyze_environmental_factors(N, P, K, temperature, humidity, ph, rainfall)
-        
-        analysis_df = pd.DataFrame([
-            {
-                'Factor': factor.capitalize(),
-                'Value': data['value'],
-                'Status': data['status']
+@app.route('/recommend', methods=['GET', 'POST'])
+def recommend():
+    """Scenario 1: Smart Crop Recommendation for Farmers"""
+    result = None
+    analysis = None
+    inputs = None
+    pred_id = None
+
+    if request.method == 'POST':
+        n = request.form.get('n', 90)
+        p = request.form.get('p', 42)
+        k = request.form.get('k', 43)
+        temperature = request.form.get('temperature', 20.88)
+        humidity = request.form.get('humidity', 82.00)
+        ph = request.form.get('ph', 6.50)
+        rainfall = request.form.get('rainfall', 202.94)
+
+        is_valid, errors = validate_crop_inputs(n, p, k, temperature, humidity, ph, rainfall)
+
+        if not is_valid:
+            for err in errors:
+                flash(err, 'danger')
+        else:
+            inputs = {
+                'n': float(n), 'p': float(p), 'k': float(k),
+                'temperature': float(temperature), 'humidity': float(humidity),
+                'ph': float(ph), 'rainfall': float(rainfall)
             }
-            for factor, data in analysis.items()
-        ])
-        
-        st.dataframe(analysis_df, use_container_width=True, hide_index=True)
+            if system:
+                result = system.predict_crop(
+                    inputs['n'], inputs['p'], inputs['k'],
+                    inputs['temperature'], inputs['humidity'], inputs['ph'], inputs['rainfall']
+                )
+                analysis = system.analyze_environmental_factors(
+                    inputs['n'], inputs['p'], inputs['k'],
+                    inputs['temperature'], inputs['humidity'], inputs['ph'], inputs['rainfall']
+                )
+
+                # Save prediction to DB
+                user_id = session.get('user_id')
+                pred_id = save_prediction(
+                    user_id=user_id,
+                    n=inputs['n'], p=inputs['p'], k=inputs['k'],
+                    temperature=inputs['temperature'], humidity=inputs['humidity'],
+                    ph=inputs['ph'], rainfall=inputs['rainfall'],
+                    recommended_crop=result['recommended_crop'],
+                    confidence=result['confidence'],
+                    top_recommendations=result['top_3_recommendations']
+                )
+                flash(f"Crop recommendation generated: {result['recommended_crop'].upper()} ({result['confidence']:.1%})", 'success')
+            else:
+                flash("Model is not loaded. Please ensure models are trained.", 'danger')
+
+    return render_template('recommend.html', result=result, analysis=analysis, inputs=inputs, pred_id=pred_id)
 
 # Scenario 2: Crop Suitability Assessment
-elif page == "🔍 Crop Suitability Assessment":
-    st.markdown('<h2 class="sub-header">Crop Suitability and Environmental Assessment</h2>', unsafe_allow_html=True)
-    
-    st.write("""
-    Check whether your current soil and climate conditions are suitable for a specific crop.
-    Get insights about crop compatibility, environmental suitability, and productivity potential.
-    """)
-    
-    N, P, K, temperature, humidity, ph, rainfall = get_environmental_inputs()
-    
-    # Get all available crops
-    all_crops = system.get_all_crops()
-    target_crop = st.selectbox("Select Crop to Assess", sorted(all_crops))
-    
-    if st.button("🔍 Assess Suitability", type="primary"):
-        with st.spinner("Assessing crop suitability..."):
-            suitability = system.assess_crop_suitability(
-                N, P, K, temperature, humidity, ph, rainfall, target_crop
-            )
-        
-        if 'error' in suitability:
-            st.error(suitability['error'])
+@app.route('/suitability', methods=['GET', 'POST'])
+def suitability():
+    """Scenario 2: Crop Suitability & Environmental Assessment"""
+    all_crops = system.get_all_crops() if system else []
+    selected_crop = 'rice'
+    suitability_res = None
+    inputs = None
+
+    if request.method == 'POST':
+        selected_crop = request.form.get('target_crop', 'rice').strip().lower()
+        n = request.form.get('n', 70)
+        p = request.form.get('p', 45)
+        k = request.form.get('k', 40)
+        temperature = request.form.get('temperature', 24.5)
+        humidity = request.form.get('humidity', 75.0)
+        ph = request.form.get('ph', 6.5)
+        rainfall = request.form.get('rainfall', 120.0)
+
+        is_valid, errors = validate_crop_inputs(n, p, k, temperature, humidity, ph, rainfall)
+
+        if not is_valid:
+            for err in errors:
+                flash(err, 'danger')
         else:
-            # Display suitability result
-            score = suitability['suitability_score']
-            level = suitability['suitability_level']
+            inputs = {
+                'n': float(n), 'p': float(p), 'k': float(k),
+                'temperature': float(temperature), 'humidity': float(humidity),
+                'ph': float(ph), 'rainfall': float(rainfall)
+            }
+            if system:
+                suitability_res = system.assess_crop_suitability(
+                    inputs['n'], inputs['p'], inputs['k'],
+                    inputs['temperature'], inputs['humidity'], inputs['ph'], inputs['rainfall'],
+                    selected_crop
+                )
+
+                # Save assessment to DB
+                user_id = session.get('user_id')
+                save_suitability_assessment(
+                    user_id=user_id,
+                    target_crop=selected_crop,
+                    n=inputs['n'], p=inputs['p'], k=inputs['k'],
+                    temperature=inputs['temperature'], humidity=inputs['humidity'],
+                    ph=inputs['ph'], rainfall=inputs['rainfall'],
+                    suitability_score=suitability_res['suitability_score'],
+                    suitability_level=suitability_res['suitability_level'],
+                    recommendation=suitability_res['recommendation']
+                )
+                flash(f"Suitability assessed for {selected_crop.capitalize()}: {suitability_res['suitability_level']} ({suitability_res['suitability_score']:.1%})", 'info')
+
+    return render_template('suitability.html', all_crops=all_crops, selected_crop=selected_crop, suitability=suitability_res, inputs=inputs)
+
+# Scenario 3: Agricultural Research & Policy Dashboard
+@app.route('/research')
+def research():
+    """Scenario 3: Agricultural Research and Policy Planning Dashboard"""
+    stats = get_system_stats()
+    return render_template('research.html', stats=stats)
+
+# Prediction History
+@app.route('/history')
+def history():
+    """View prediction and suitability audit logs"""
+    user_id = session.get('user_id')
+    # If admin, show all; if regular user, show user's; if guest, show recent
+    role = session.get('role')
+    filter_user_id = user_id if (role != 'admin' and user_id) else None
+    
+    predictions = get_predictions_by_user(filter_user_id, limit=100)
+    assessments = get_suitability_history(filter_user_id, limit=100)
+    return render_template('history.html', predictions=predictions, assessments=assessments)
+
+# Printable Report
+@app.route('/report/<int:pred_id>')
+def view_report(pred_id):
+    """View official printable / PDF recommendation report"""
+    pred = get_prediction_by_id(pred_id)
+    if not pred:
+        flash("Report not found.", 'danger')
+        return redirect(url_for('history'))
+    
+    top_recs = []
+    if pred.get('top_recommendations'):
+        try:
+            top_recs = json.loads(pred['top_recommendations'])
+        except:
+            top_recs = []
+    
+    return render_template('report_view.html', pred=pred, top_recs=top_recs)
+
+# Dataset Explorer
+@app.route('/dataset')
+def dataset_view():
+    """Browse and filter dataset samples"""
+    search_query = request.args.get('search', '').strip().lower()
+    crop_filter = request.args.get('crop_filter', '').strip().lower()
+    
+    try:
+        df = pd.read_csv(DATA_PATH)
+        crops_list = sorted(df['label'].unique().tolist())
+        
+        filtered_df = df
+        if crop_filter:
+            filtered_df = filtered_df[filtered_df['label'] == crop_filter]
+        if search_query:
+            filtered_df = filtered_df[filtered_df['label'].str.contains(search_query)]
             
-            # Color coding based on suitability
-            if score >= 0.7:
-                color = "#d4edda"
-                border = "#c3e6cb"
-                text_color = "#155724"
-            elif score >= 0.5:
-                color = "#fff3cd"
-                border = "#ffeaa7"
-                text_color = "#856404"
+        rows = filtered_df.head(150).to_dict(orient='records')
+        total_samples = len(df)
+    except Exception as e:
+        crops_list = []
+        rows = []
+        total_samples = 0
+        flash(f"Error loading dataset: {e}", 'warning')
+
+    return render_template('dataset.html', rows=rows, crops_list=crops_list, total_samples=total_samples, search_query=search_query, selected_filter=crop_filter)
+
+# User Feedback
+@app.route('/feedback', methods=['GET', 'POST'])
+def feedback_view():
+    """Farmer and user feedback form"""
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        email = request.form.get('email', '').strip()
+        rating = int(request.form.get('rating', 5))
+        comments = request.form.get('comments', '').strip()
+
+        if name and email and comments:
+            save_feedback(session.get('user_id'), name, email, rating, comments)
+            flash("Thank you for your feedback! It helps improve OptiCrop recommendations.", 'success')
+            return redirect(url_for('feedback_view'))
+        else:
+            flash("Please complete all required feedback fields.", 'danger')
+
+    feedback_list = get_all_feedback(limit=25)
+    return render_template('feedback.html', feedback_list=feedback_list)
+
+# Export Predictions to CSV
+@app.route('/export/predictions')
+def export_predictions():
+    """Export prediction records to CSV"""
+    user_id = session.get('user_id')
+    role = session.get('role')
+    filter_user_id = user_id if (role != 'admin' and user_id) else None
+    predictions = get_predictions_by_user(filter_user_id, limit=500)
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(['ID', 'Farmer', 'N', 'P', 'K', 'Temperature_C', 'Humidity_Pct', 'pH', 'Rainfall_mm', 'Recommended_Crop', 'Confidence', 'Date'])
+
+    for p in predictions:
+        writer.writerow([
+            p['id'], p.get('full_name') or p.get('username') or 'Guest',
+            p['n'], p['p'], p['k'], p['temperature'], p['humidity'], p['ph'], p['rainfall'],
+            p['recommended_crop'], f"{p['confidence'] * 100:.2f}%", p['created_at']
+        ])
+
+    output.seek(0)
+    return Response(
+        output.getvalue(),
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=opticropt_predictions.csv"}
+    )
+
+# Authentication: Register
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    """User registration (FT-01)"""
+    if request.method == 'POST':
+        username = request.form.get('username', '').strip()
+        email = request.form.get('email', '').strip()
+        password = request.form.get('password', '')
+        full_name = request.form.get('full_name', '').strip()
+        role = request.form.get('role', 'farmer')
+
+        if len(username) < 3:
+            flash("Username must be at least 3 characters long.", 'danger')
+        elif len(password) < 6:
+            flash("Password must be at least 6 characters long.", 'danger')
+        else:
+            success, message, user_id = register_user(username, email, password, full_name, role)
+            if success:
+                flash(message, 'success')
+                return redirect(url_for('login'))
             else:
-                color = "#f8d7da"
-                border = "#f5c6cb"
-                text_color = "#721c24"
-            
-            st.markdown(f"""
-            <div style="background-color: {color}; border: 1px solid {border}; 
-                        color: {text_color}; padding: 1.5rem; border-radius: 10px; margin: 1rem 0;">
-                <h3 style="margin-top: 0;">Suitability Assessment for {target_crop}</h3>
-                <p style="font-size: 1.2rem; margin-bottom: 0.5rem;">
-                    <strong>Suitability Level:</strong> {level}
-                </p>
-                <p style="font-size: 1.5rem; margin-bottom: 1rem;">
-                    <strong>Score:</strong> {score:.1%}
-                </p>
-                <p>{suitability['recommendation']}</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Progress bar for visual representation
-            st.progress(score)
-            st.caption(f"Suitability Score: {score:.1%}")
-            
-            # Environmental analysis
-            st.subheader("Environmental Factor Analysis")
-            analysis = system.analyze_environmental_factors(N, P, K, temperature, humidity, ph, rainfall)
-            
-            analysis_df = pd.DataFrame([
-                {
-                    'Factor': factor.capitalize(),
-                    'Value': data['value'],
-                    'Status': data['status']
-                }
-                for factor, data in analysis.items()
-            ])
-            
-            st.dataframe(analysis_df, use_container_width=True, hide_index=True)
+                flash(message, 'danger')
 
-# Scenario 3: Agricultural Research Dashboard
-elif page == "📊 Agricultural Research Dashboard":
-    st.markdown('<h2 class="sub-header">Agricultural Research and Policy Planning</h2>', unsafe_allow_html=True)
-    
-    st.write("""
-    Analyze crop-environment relationships and identify patterns in agricultural production.
-    This dashboard helps researchers and policymakers make data-driven decisions for 
-    sustainable farming strategies and resource optimization.
-    """)
-    
-    # Load the dataset for analysis
-    data_path = os.path.join(os.path.dirname(__file__), 'data', 'crop_recommendation.csv')
-    df = pd.read_csv(data_path)
-    
-    # Dashboard tabs
-    tab1, tab2, tab3 = st.tabs(["Crop Distribution", "Environmental Analysis", "Crop-Environment Relationships"])
-    
-    with tab1:
-        st.subheader("Crop Distribution in Dataset")
-        
-        crop_counts = df['label'].value_counts().reset_index()
-        crop_counts.columns = ['Crop', 'Count']
-        
-        fig = px.bar(crop_counts, x='Crop', y='Count', 
-                     title='Distribution of Crop Samples',
-                     color='Count',
-                     color_continuous_scale='Viridis')
-        fig.update_layout(xaxis_tickangle=-45)
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Statistics
-        st.subheader("Dataset Statistics")
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Total Samples", len(df))
-        with col2:
-            st.metric("Unique Crops", df['label'].nunique())
-        with col3:
-            st.metric("Environmental Features", len(df.columns) - 1)
-    
-    with tab2:
-        st.subheader("Environmental Factor Analysis")
-        
-        # Feature distributions
-        features = ['N', 'P', 'K', 'temperature', 'humidity', 'ph', 'rainfall']
-        selected_feature = st.selectbox("Select Environmental Factor", features)
-        
-        fig = px.histogram(df, x=selected_feature, 
-                          title=f'Distribution of {selected_feature}',
-                          nbins=50,
-                          color='label')
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Correlation matrix
-        st.subheader("Correlation Matrix of Environmental Factors")
-        corr_matrix = df[features].corr()
-        
-        fig = px.imshow(corr_matrix, 
-                       text_auto=True,
-                       color_continuous_scale='RdBu_r',
-                       title='Correlation Matrix')
-        st.plotly_chart(fig, use_container_width=True)
-    
-    with tab3:
-        st.subheader("Crop-Environment Relationships")
-        
-        # Select two features to compare
-        col1, col2 = st.columns(2)
-        with col1:
-            feature_x = st.selectbox("Select X-axis Feature", features, index=3)
-        with col2:
-            feature_y = st.selectbox("Select Y-axis Feature", features, index=6)
-        
-        # Scatter plot
-        fig = px.scatter(df, x=feature_x, y=feature_y, color='label',
-                        title=f'{feature_x} vs {feature_y} by Crop',
-                        hover_data=['label'])
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Box plots for each crop
-        st.subheader("Environmental Ranges by Crop")
-        selected_crop = st.selectbox("Select Crop", sorted(df['label'].unique()))
-        
-        crop_data = df[df['label'] == selected_crop]
-        
-        cols = st.columns(4)
-        for i, (col, feature) in enumerate(zip(cols, features[:4])):
-            with col:
-                fig = px.box(crop_data, y=feature, 
-                           title=f'{feature} for {selected_crop}')
-                st.plotly_chart(fig, use_container_width=True)
-        
-        cols = st.columns(3)
-        for i, (col, feature) in enumerate(zip(cols, features[4:])):
-            with col:
-                fig = px.box(crop_data, y=feature, 
-                           title=f'{feature} for {selected_crop}')
-                st.plotly_chart(fig, use_container_width=True)
+    return render_template('register.html')
 
-# Footer
-st.markdown("""
----
-<div style="text-align: center; color: #666; margin-top: 2rem;">
-    <p>🌾 OptiCrop - Smart Agricultural Production Optimization Engine</p>
-    <p>Empowering farmers with data-driven insights for sustainable agriculture</p>
-</div>
-""", unsafe_allow_html=True)
+# Authentication: Login
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    """User authentication (FT-02 / ST-01)"""
+    if request.method == 'POST':
+        username_or_email = request.form.get('username_or_email', '').strip()
+        password = request.form.get('password', '')
+
+        user = authenticate_user(username_or_email, password)
+        if user:
+            session['user_id'] = user['id']
+            session['username'] = user['username']
+            session['email'] = user['email']
+            session['full_name'] = user['full_name']
+            session['role'] = user['role']
+            flash(f"Welcome back, {user['full_name'] or user['username']}!", 'success')
+            return redirect(url_for('recommend'))
+        else:
+            flash("Invalid email/username or password. Please try again.", 'danger')
+
+    return render_template('login.html')
+
+# Authentication: Logout
+@app.route('/logout')
+def logout():
+    """Terminate session (USN-20)"""
+    session.clear()
+    flash("You have successfully signed out.", 'info')
+    return redirect(url_for('index'))
+
+# User Profile
+@app.route('/profile')
+def profile():
+    """User profile overview (USN-3)"""
+    user_id = session.get('user_id')
+    if not user_id:
+        flash("Please log in to view your profile.", 'warning')
+        return redirect(url_for('login'))
+
+    user = get_user_by_id(user_id)
+    preds = get_predictions_by_user(user_id)
+    suits = get_suitability_history(user_id)
+    return render_template('profile.html', user=user, user_preds_count=len(preds), user_suits_count=len(suits))
+
+# --- REST APIs (For IoT sensors, mobile apps & automated testing) ---
+
+@app.route('/api/predict', methods=['POST'])
+def api_predict():
+    """API endpoint for crop recommendation"""
+    data = request.get_json(force=True, silent=True) or request.form
+    try:
+        n = float(data.get('n', 90))
+        p = float(data.get('p', 42))
+        k = float(data.get('k', 43))
+        temperature = float(data.get('temperature', 20.88))
+        humidity = float(data.get('humidity', 82.00))
+        ph = float(data.get('ph', 6.50))
+        rainfall = float(data.get('rainfall', 202.94))
+    except (ValueError, TypeError) as e:
+        return jsonify({'success': False, 'error': f"Invalid numeric input: {str(e)}"}), 400
+
+    is_valid, errors = validate_crop_inputs(n, p, k, temperature, humidity, ph, rainfall)
+    if not is_valid:
+        return jsonify({'success': False, 'errors': errors}), 422
+
+    if not system:
+        return jsonify({'success': False, 'error': 'Model not loaded'}), 503
+
+    result = system.predict_crop(n, p, k, temperature, humidity, ph, rainfall)
+    analysis = system.analyze_environmental_factors(n, p, k, temperature, humidity, ph, rainfall)
+
+    pred_id = save_prediction(
+        user_id=session.get('user_id'),
+        n=n, p=p, k=k, temperature=temperature, humidity=humidity, ph=ph, rainfall=rainfall,
+        recommended_crop=result['recommended_crop'],
+        confidence=result['confidence'],
+        top_recommendations=result['top_3_recommendations']
+    )
+
+    return jsonify({
+        'success': True,
+        'prediction_id': pred_id,
+        'recommended_crop': result['recommended_crop'],
+        'confidence': result['confidence'],
+        'top_3_recommendations': result['top_3_recommendations'],
+        'analysis': analysis
+    })
+
+@app.route('/api/assess', methods=['POST'])
+def api_assess():
+    """API endpoint for crop suitability assessment"""
+    data = request.get_json(force=True, silent=True) or request.form
+    target_crop = data.get('target_crop', 'rice').strip().lower()
+
+    try:
+        n = float(data.get('n', 70))
+        p = float(data.get('p', 45))
+        k = float(data.get('k', 40))
+        temperature = float(data.get('temperature', 24.5))
+        humidity = float(data.get('humidity', 75.0))
+        ph = float(data.get('ph', 6.5))
+        rainfall = float(data.get('rainfall', 120.0))
+    except (ValueError, TypeError) as e:
+        return jsonify({'success': False, 'error': f"Invalid numeric input: {str(e)}"}), 400
+
+    is_valid, errors = validate_crop_inputs(n, p, k, temperature, humidity, ph, rainfall)
+    if not is_valid:
+        return jsonify({'success': False, 'errors': errors}), 422
+
+    if not system:
+        return jsonify({'success': False, 'error': 'Model not loaded'}), 503
+
+    res = system.assess_crop_suitability(n, p, k, temperature, humidity, ph, rainfall, target_crop)
+    return jsonify({'success': True, 'suitability': res})
+
+@app.route('/api/stats', methods=['GET'])
+def api_stats():
+    """System statistics API"""
+    return jsonify(get_system_stats())
+
+if __name__ == '__main__':
+    port = int(os.environ.get('PORT', 5000))
+    print(f"🌾 OptiCrop Flask Application starting at http://127.0.0.1:{port}")
+    app.run(host='0.0.0.0', port=port, debug=True)

@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}User Feedback & Ratings - OptiCrop{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <span class="badge bg-warning-subtle text-dark border px-3 py-1 rounded-pill mb-2 w-auto align-self-start">
+                    <i class="fa-solid fa-comments me-1"></i> Community Voice
+                </span>
+                <h3 class="fw-bold mb-2">Farmer & Researcher Feedback</h3>
+                <p class="text-muted small mb-4">We value your on-the-ground experience with OptiCrop recommendations.</p>
+
+                <form method="POST" action="{{ url_for('feedback_view') }}">
+                    <div class="mb-3">
+                        <label for="name" class="form-label fw-semibold">Your Name</label>
+                        <input type="text" class="form-control" id="name" name="name" value="{{ session.get('full_name') or '' }}" placeholder="Kishan Rao" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label fw-semibold">Email</label>
+                        <input type="email" class="form-control" id="email" name="email" value="{{ session.get('email') or '' }}" placeholder="kishan@example.com" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="rating" class="form-label fw-semibold">Platform Rating (1-5 Stars)</label>
+                        <select class="form-select" id="rating" name="rating" required>
+                            <option value="5" selected>⭐⭐⭐⭐⭐ (5 - Outstanding Accuracy)</option>
+                            <option value="4">⭐⭐⭐⭐ (4 - Very Useful)</option>
+                            <option value="3">⭐⭐⭐ (3 - Satisfactory)</option>
+                            <option value="2">⭐⭐ (2 - Needs Improvement)</option>
+                            <option value="1">⭐ (1 - Inaccurate)</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="comments" class="form-label fw-semibold">Comments & Suggestions</label>
+                        <textarea class="form-control" id="comments" name="comments" rows="4" placeholder="How accurate were the crop suggestions for your soil? Any additional crops you'd like added?" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-warning btn-lg w-100 rounded-pill fw-bold text-dark shadow-sm">
+                        <i class="fa-solid fa-paper-plane me-2"></i> Submit Feedback
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <h5 class="fw-bold mb-3 d-flex align-items-center text-dark">
+                    <i class="fa-solid fa-star text-warning me-2"></i> Recent Feedback & Reviews
+                </h5>
+
+                {% if feedback_list %}
+                    <div class="d-flex flex-column gap-3">
+                        {% for fb in feedback_list %}
+                            <div class="p-3 rounded-3 bg-light border">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="text-dark">{{ fb.name }}</strong>
+                                    <span class="text-warning small">
+                                        {% for i in range(fb.rating) %}★{% endfor %}
+                                    </span>
+                                </div>
+                                <p class="text-muted small mb-1">{{ fb.comments }}</p>
+                                <div class="text-muted" style="font-size: 0.75rem;">
+                                    <i class="fa-solid fa-clock me-1"></i> {{ fb.created_at[:16] }}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="text-center py-5 text-muted">
+                        <i class="fa-regular fa-message fs-1 mb-2 d-block"></i>
+                        No feedback submitted yet. Be the first to share your experience!
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

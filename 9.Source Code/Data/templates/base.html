@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}OptiCrop - Smart Agricultural Production Optimization Engine{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-forest sticky-top shadow-sm">
+        <div class="container-fluid px-lg-5">
+            <a class="navbar-brand d-flex align-items-center fw-bold" href="{{ url_for('index') }}">
+                <span class="brand-icon me-2"><i class="fa-solid fa-seedling text-warning"></i></span>
+                <span>OptiCrop</span>
+                <span class="badge bg-success-subtle text-success border border-success-subtle ms-2 d-none d-sm-inline font-monospace" style="font-size: 0.65rem;">AI v2.0</span>
+            </a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == url_for('index') %}active{% endif %}" href="{{ url_for('index') }}">
+                            <i class="fa-solid fa-house me-1"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == url_for('recommend') %}active{% endif %}" href="{{ url_for('recommend') }}">
+                            <i class="fa-solid fa-wheat-awn me-1 text-warning"></i> Scenario 1: Crop Recommendation
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == url_for('suitability') %}active{% endif %}" href="{{ url_for('suitability') }}">
+                            <i class="fa-solid fa-magnifying-glass-chart me-1 text-info"></i> Scenario 2: Suitability
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == url_for('research') %}active{% endif %}" href="{{ url_for('research') }}">
+                            <i class="fa-solid fa-chart-line me-1 text-light"></i> Scenario 3: Research Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == url_for('history') %}active{% endif %}" href="{{ url_for('history') }}">
+                            <i class="fa-solid fa-clock-rotate-left me-1"></i> History
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == url_for('dataset_view') %}active{% endif %}" href="{{ url_for('dataset_view') }}">
+                            <i class="fa-solid fa-database me-1"></i> Dataset
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == url_for('feedback_view') %}active{% endif %}" href="{{ url_for('feedback_view') }}">
+                            <i class="fa-solid fa-comments me-1"></i> Feedback
+                        </a>
+                    </li>
+                </ul>
+
+                <div class="d-flex align-items-center">
+                    {% if session.get('user_id') %}
+                        <div class="dropdown">
+                            <button class="btn btn-outline-light dropdown-toggle d-flex align-items-center gap-2 py-1 px-3 rounded-pill" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fa-solid fa-circle-user text-warning fs-5"></i>
+                                <span class="fw-medium">{{ session.get('full_name') or session.get('username') }}</span>
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
+                                <li>
+                                    <div class="dropdown-header text-muted">
+                                        Signed in as <strong>@{{ session.get('username') }}</strong><br>
+                                        <small class="badge bg-secondary text-uppercase">{{ session.get('role', 'farmer') }}</small>
+                                    </div>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center gap-2" href="{{ url_for('profile') }}">
+                                        <i class="fa-solid fa-id-card text-primary"></i> My Profile
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center gap-2" href="{{ url_for('history') }}">
+                                        <i class="fa-solid fa-list-check text-success"></i> My Predictions
+                                    </a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="{{ url_for('logout') }}">
+                                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Sign Out
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('login') }}" class="btn btn-outline-light btn-sm rounded-pill px-3">
+                                <i class="fa-solid fa-right-to-bracket me-1"></i> Sign In
+                            </a>
+                            <a href="{{ url_for('register') }}" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold text-dark">
+                                <i class="fa-solid fa-user-plus me-1"></i> Register
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages Container -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show shadow-sm d-flex align-items-center" role="alert">
+                        <i class="fa-solid {% if category == 'success' %}fa-circle-check text-success{% elif category == 'warning' %}fa-triangle-exclamation text-warning{% else %}fa-circle-exclamation text-danger{% endif %} me-2 fs-5"></i>
+                        <div>{{ message }}</div>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content Block -->
+    <main class="flex-grow-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer bg-dark text-white pt-5 pb-3 mt-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-lg-4 col-md-6">
+                    <h5 class="fw-bold text-success d-flex align-items-center">
+                        <i class="fa-solid fa-seedling me-2"></i> OptiCrop Engine
+                    </h5>
+                    <p class="text-white-50 small mt-2">
+                        Smart Agricultural Production Optimization Engine — An intelligent data-driven platform empowering farmers, researchers, and policymakers with precision AI crop recommendations and environmental suitability analytics.
+                    </p>
+                    <div class="d-flex gap-2">
+                        <span class="badge bg-success">Accuracy: 99.55%</span>
+                        <span class="badge bg-primary">Crops: 22</span>
+                        <span class="badge bg-secondary">Random Forest</span>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6">
+                    <h6 class="text-uppercase fw-bold text-light mb-3">Project Modules</h6>
+                    <ul class="list-unstyled small text-white-50">
+                        <li class="mb-2"><a href="{{ url_for('recommend') }}" class="text-decoration-none text-white-50 hover-link"><i class="fa-solid fa-angles-right text-success me-2"></i>Scenario 1: Smart Crop Recommendation</a></li>
+                        <li class="mb-2"><a href="{{ url_for('suitability') }}" class="text-decoration-none text-white-50 hover-link"><i class="fa-solid fa-angles-right text-success me-2"></i>Scenario 2: Crop Suitability Assessment</a></li>
+                        <li class="mb-2"><a href="{{ url_for('research') }}" class="text-decoration-none text-white-50 hover-link"><i class="fa-solid fa-angles-right text-success me-2"></i>Scenario 3: Agricultural Research Dashboard</a></li>
+                        <li class="mb-2"><a href="{{ url_for('dataset_view') }}" class="text-decoration-none text-white-50 hover-link"><i class="fa-solid fa-angles-right text-success me-2"></i>Dataset Explorer & Feature Analysis</a></li>
+                    </ul>
+                </div>
+
+                <div class="col-lg-4 col-md-12">
+                    <h6 class="text-uppercase fw-bold text-light mb-3">Project Team & Credits</h6>
+                    <div class="small text-white-50">
+                        <p class="mb-1"><strong class="text-white"><i class="fa-solid fa-crown text-warning me-1"></i> Shaik Husamuddin</strong> (Team Lead)</p>
+                        <p class="mb-1"><strong class="text-white"><i class="fa-solid fa-user me-1"></i> Mohammad Aqball</strong> (Member)</p>
+                        <p class="mb-1"><strong class="text-white"><i class="fa-solid fa-user me-1"></i> Nama Akhila</strong> (Member)</p>
+                        <p class="mb-1"><strong class="text-white"><i class="fa-solid fa-user me-1"></i> Peruboina Lakshmi Meghana</strong> (Member)</p>
+                        <p class="mb-1"><strong class="text-white"><i class="fa-solid fa-user me-1"></i> Madugula SudheerBabu</strong> (Member)</p>
+                    </div>
+                </div>
+            </div>
+            <hr class="border-secondary my-4">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center small text-white-50">
+                <div>&copy; 2025-2026 OptiCrop. APSCHE Engineering Project. All rights reserved.</div>
+                <div>Powered by Python Flask, Scikit-learn, Pandas & Bootstrap 5</div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

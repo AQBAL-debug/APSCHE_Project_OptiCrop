@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Crop Recommendation Dataset Explorer - OptiCrop{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
+        <div>
+            <span class="badge bg-secondary-subtle text-dark border px-3 py-1 rounded-pill mb-1">
+                <i class="fa-solid fa-database me-1"></i> Data Source
+            </span>
+            <h2 class="fw-bold mb-1">Crop Recommendation Dataset Explorer</h2>
+            <p class="text-muted mb-0">Browse and filter the curated 2,200 agricultural samples across 22 crop classes.</p>
+        </div>
+        <div class="mt-2 mt-md-0">
+            <span class="badge bg-success-subtle text-success border px-3 py-2 rounded-pill font-monospace">
+                Total Samples: {{ total_samples }}
+            </span>
+        </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+        <form method="GET" action="{{ url_for('dataset_view') }}" class="row g-2 align-items-center">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" class="form-control border-start-0" name="search" placeholder="Filter by crop name (e.g. rice, cotton, coffee)..." value="{{ search_query }}">
+                </div>
+            </div>
+            <div class="col-md-4">
+                <select class="form-select text-capitalize" name="crop_filter">
+                    <option value="">All 22 Crops</option>
+                    {% for c in crops_list %}
+                        <option value="{{ c }}" {% if selected_filter == c %}selected{% endif %}>{{ c }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary rounded-pill w-100 fw-bold">Filter</button>
+                <a href="{{ url_for('dataset_view') }}" class="btn btn-outline-secondary rounded-pill">Reset</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Dataset Table -->
+    <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped align-middle mb-0 text-center">
+                <thead class="table-light small text-uppercase">
+                    <tr>
+                        <th>#</th>
+                        <th>Crop Label</th>
+                        <th>Nitrogen (N)</th>
+                        <th>Phosphorus (P)</th>
+                        <th>Potassium (K)</th>
+                        <th>Temperature (°C)</th>
+                        <th>Humidity (%)</th>
+                        <th>Soil pH</th>
+                        <th>Rainfall (mm)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in rows %}
+                        <tr>
+                            <td class="text-muted small font-monospace">{{ loop.index }}</td>
+                            <td class="fw-bold text-success text-capitalize text-start ps-4">{{ row.label }}</td>
+                            <td class="font-monospace">{{ row.N }}</td>
+                            <td class="font-monospace">{{ row.P }}</td>
+                            <td class="font-monospace">{{ row.K }}</td>
+                            <td class="font-monospace">{{ "%.2f"|format(row.temperature) }}</td>
+                            <td class="font-monospace">{{ "%.2f"|format(row.humidity) }}</td>
+                            <td class="font-monospace">{{ "%.2f"|format(row.ph) }}</td>
+                            <td class="font-monospace">{{ "%.2f"|format(row.rainfall) }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

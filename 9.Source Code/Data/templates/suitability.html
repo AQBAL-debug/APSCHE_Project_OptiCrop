@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+
+{% block title %}Scenario 2: Crop Suitability Assessment - OptiCrop{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="mb-4">
+        <span class="badge bg-primary-subtle text-primary border border-primary-subtle px-3 py-1 rounded-pill mb-1">
+            <i class="fa-solid fa-magnifying-glass-chart me-1"></i> Scenario 2
+        </span>
+        <h2 class="fw-bold mb-1">Crop Suitability and Environmental Assessment</h2>
+        <p class="text-muted mb-0">Select your intended crop and evaluate whether your current soil and climate are compatible for profitable cultivation.</p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Input Form -->
+        <div class="col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <h5 class="fw-bold mb-3 text-primary d-flex align-items-center">
+                    <i class="fa-solid fa-seedling me-2"></i> Crop & Field Details
+                </h5>
+
+                <form method="POST" action="{{ url_for('suitability') }}">
+                    <!-- Target Crop Selection -->
+                    <div class="mb-4">
+                        <label for="target_crop" class="form-label fw-bold">
+                            <i class="fa-solid fa-apple-whole text-danger me-1"></i> Select Crop to Assess:
+                        </label>
+                        <select class="form-select form-select-lg fw-bold text-capitalize shadow-sm" id="target_crop" name="target_crop" required>
+                            {% for c in all_crops %}
+                                <option value="{{ c }}" {% if selected_crop == c %}selected{% endif %}>{{ c }}</option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">Choose from 22 supported crop profiles.</div>
+                    </div>
+
+                    <h6 class="fw-bold text-muted small text-uppercase mb-3">Field Environmental Parameters</h6>
+
+                    <!-- Nitrogen -->
+                    <div class="param-box">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="n_input" class="form-label fw-bold mb-0">Nitrogen (N)</label>
+                            <input type="number" class="form-control form-control-sm text-center fw-bold" style="width: 80px;" id="n_input" name="n" min="0" max="140" value="{{ inputs.n if inputs else 70 }}" required>
+                        </div>
+                        <input type="range" class="form-range" id="n_range" min="0" max="140" value="{{ inputs.n if inputs else 70 }}">
+                    </div>
+
+                    <!-- Phosphorus -->
+                    <div class="param-box">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="p_input" class="form-label fw-bold mb-0">Phosphorus (P)</label>
+                            <input type="number" class="form-control form-control-sm text-center fw-bold" style="width: 80px;" id="p_input" name="p" min="5" max="145" value="{{ inputs.p if inputs else 45 }}" required>
+                        </div>
+                        <input type="range" class="form-range" id="p_range" min="5" max="145" value="{{ inputs.p if inputs else 45 }}">
+                    </div>
+
+                    <!-- Potassium -->
+                    <div class="param-box">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="k_input" class="form-label fw-bold mb-0">Potassium (K)</label>
+                            <input type="number" class="form-control form-control-sm text-center fw-bold" style="width: 80px;" id="k_input" name="k" min="5" max="205" value="{{ inputs.k if inputs else 40 }}" required>
+                        </div>
+                        <input type="range" class="form-range" id="k_range" min="5" max="205" value="{{ inputs.k if inputs else 40 }}">
+                    </div>
+
+                    <!-- Temperature -->
+                    <div class="param-box">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="temp_input" class="form-label fw-bold mb-0">Temperature (°C)</label>
+                            <input type="number" class="form-control form-control-sm text-center fw-bold" style="width: 85px;" id="temp_input" name="temperature" min="0" max="45" step="0.1" value="{{ inputs.temperature if inputs else 24.5 }}" required>
+                        </div>
+                        <input type="range" class="form-range" id="temp_range" min="0" max="45" step="0.1" value="{{ inputs.temperature if inputs else 24.5 }}">
+                    </div>
+
+                    <!-- Humidity -->
+                    <div class="param-box">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="humidity_input" class="form-label fw-bold mb-0">Humidity (%)</label>
+                            <input type="number" class="form-control form-control-sm text-center fw-bold" style="width: 80px;" id="humidity_input" name="humidity" min="10" max="100" step="0.1" value="{{ inputs.humidity if inputs else 75.0 }}" required>
+                        </div>
+                        <input type="range" class="form-range" id="humidity_range" min="10" max="100" step="0.1" value="{{ inputs.humidity if inputs else 75.0 }}">
+                    </div>
+
+                    <!-- pH -->
+                    <div class="param-box">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="ph_input" class="form-label fw-bold mb-0">Soil pH</label>
+                            <input type="number" class="form-control form-control-sm text-center fw-bold" style="width: 80px;" id="ph_input" name="ph" min="3.5" max="9.5" step="0.1" value="{{ inputs.ph if inputs else 6.5 }}" required>
+                        </div>
+                        <input type="range" class="form-range" id="ph_range" min="3.5" max="9.5" step="0.1" value="{{ inputs.ph if inputs else 6.5 }}">
+                    </div>
+
+                    <!-- Rainfall -->
+                    <div class="param-box">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="rainfall_input" class="form-label fw-bold mb-0">Rainfall (mm)</label>
+                            <input type="number" class="form-control form-control-sm text-center fw-bold" style="width: 85px;" id="rainfall_input" name="rainfall" min="20" max="300" step="0.1" value="{{ inputs.rainfall if inputs else 120.0 }}" required>
+                        </div>
+                        <input type="range" class="form-range" id="rainfall_range" min="20" max="300" step="0.1" value="{{ inputs.rainfall if inputs else 120.0 }}">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill fw-bold shadow mt-2">
+                        <i class="fa-solid fa-magnifying-glass me-2"></i> Assess Crop Compatibility
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Result Column -->
+        <div class="col-lg-7">
+            {% if suitability %}
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                    <!-- Status Header -->
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-secondary-subtle text-dark px-3 py-2 rounded-pill font-monospace">
+                            Crop: <strong class="text-uppercase">{{ suitability.target_crop }}</strong>
+                        </span>
+                        <span class="badge {% if 'High' in suitability.suitability_level %}bg-success{% elif 'Moderate' in suitability.suitability_level %}bg-warning text-dark{% else %}bg-danger{% endif %} px-3 py-2 rounded-pill">
+                            {{ suitability.suitability_level }}
+                        </span>
+                    </div>
+
+                    <!-- Suitability Score Progress -->
+                    <div class="p-4 rounded-4 text-center mb-4 {% if 'High' in suitability.suitability_level %}bg-success-subtle border border-success-subtle{% elif 'Moderate' in suitability.suitability_level %}bg-warning-subtle border border-warning-subtle{% else %}bg-danger-subtle border border-danger-subtle{% endif %}">
+                        <span class="text-muted small text-uppercase fw-bold">Overall Environmental Suitability Score</span>
+                        <h1 class="display-4 fw-extrabold my-1 {% if 'High' in suitability.suitability_level %}text-success{% elif 'Moderate' in suitability.suitability_level %}text-warning{% else %}text-danger{% endif %}">
+                            {{ "%.1f"|format(suitability.suitability_score * 100) }}%
+                        </h1>
+                        <p class="mb-2 fw-medium text-dark">{{ suitability.recommendation }}</p>
+                        <div class="progress bg-white shadow-sm mt-3" style="height: 12px;">
+                            <div class="progress-bar {% if 'High' in suitability.suitability_level %}bg-success{% elif 'Moderate' in suitability.suitability_level %}bg-warning{% else %}bg-danger{% endif %}" role="progressbar" style="width: {{ suitability.suitability_score * 100 }}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Factor Gap Breakdown -->
+                    <h5 class="fw-bold mb-3 d-flex align-items-center text-dark">
+                        <i class="fa-solid fa-scale-balanced text-primary me-2"></i> Factor-by-Factor Requirement Comparison
+                    </h5>
+                    <div class="table-responsive mb-3">
+                        <table class="table table-hover align-middle border rounded-3 mb-0">
+                            <thead class="table-light small text-uppercase">
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Your Field Value</th>
+                                    <th>Ideal Range for {{ suitability.target_crop|capitalize }}</th>
+                                    <th>Compatibility</th>
+                                    <th>Agronomic Advisory</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in suitability.param_analysis %}
+                                    <tr>
+                                        <td class="fw-bold">{{ p.label }}</td>
+                                        <td class="font-monospace fw-bold">{{ p.user_value }}</td>
+                                        <td class="small text-muted font-monospace">{{ p.min }} - {{ p.max }} (avg {{ p.mean }})</td>
+                                        <td>
+                                            <span class="badge {% if p.status == 'Optimal' %}bg-success{% elif 'Low' in p.status %}bg-warning text-dark{% else %}bg-danger{% endif %} rounded-pill">
+                                                {{ p.status }}
+                                            </span>
+                                        </td>
+                                        <td class="small">{{ p.advice }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white h-100 d-flex flex-column justify-content-center align-items-center">
+                    <div class="p-4 rounded-circle bg-primary-subtle mb-3 text-primary fs-1">
+                        <i class="fa-solid fa-magnifying-glass-chart"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-2">Ready to Assess Crop Suitability</h4>
+                    <p class="text-muted small mx-auto" style="max-width: 420px;">
+                        Select a crop like <em>Rice, Maize, Cotton, Banana, Coffee,</em> or <em>Apple</em> on the left, review or adjust your soil/weather numbers, and click <strong>Assess Crop Compatibility</strong>.
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

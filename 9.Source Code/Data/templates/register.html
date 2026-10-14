@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Register - OptiCrop{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex p-3 bg-warning-subtle rounded-circle text-warning fs-3 mb-2">
+                        <i class="fa-solid fa-user-plus"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">Create Account</h3>
+                    <p class="text-muted small">Join OptiCrop to record your farm parameters & access AI predictions.</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('register') }}">
+                    <div class="mb-3">
+                        <label for="full_name" class="form-label fw-semibold">Full Name</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-address-card text-muted"></i></span>
+                            <input type="text" class="form-control border-start-0" id="full_name" name="full_name" placeholder="Ramesh Patel" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="username" class="form-label fw-semibold">Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-at text-muted"></i></span>
+                            <input type="text" class="form-control border-start-0" id="username" name="username" placeholder="ramesh_farmer" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="email" class="form-label fw-semibold">Email Address</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-envelope text-muted"></i></span>
+                            <input type="email" class="form-control border-start-0" id="email" name="email" placeholder="ramesh@example.com" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="password" class="form-label fw-semibold">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-lock text-muted"></i></span>
+                            <input type="password" class="form-control border-start-0" id="password" name="password" placeholder="At least 6 characters" minlength="6" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="role" class="form-label fw-semibold">Account Role</label>
+                        <select class="form-select" id="role" name="role">
+                            <option value="farmer" selected>Farmer / Cultivator</option>
+                            <option value="researcher">Agricultural Researcher / Agronomist</option>
+                            <option value="policymaker">Extension Officer / Policymaker</option>
+                        </select>
+                    </div>
+
+                    <button type="submit" class="btn btn-warning btn-lg w-100 rounded-pill fw-bold text-dark shadow-sm mb-3">
+                        <i class="fa-solid fa-user-check me-2"></i> Register Account
+                    </button>
+
+                    <div class="text-center small">
+                        Already have an account? <a href="{{ url_for('login') }}" class="text-success fw-bold text-decoration-none">Sign in here</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

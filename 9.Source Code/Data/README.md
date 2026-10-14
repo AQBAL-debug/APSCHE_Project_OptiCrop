@@ -2,239 +2,101 @@
 
 OptiCrop is an advanced software system that utilizes data-driven insights to optimize agricultural production for different crops. By integrating key environmental factors such as Nitrogen (N), Phosphorous (P), Potassium (K) levels, soil temperature, humidity, pH, rainfall, and crop types, OptiCrop provides intelligent recommendations to farmers for maximizing yields and resource efficiency.
 
-## Features
+---
 
-### Scenario 1: Smart Crop Recommendation for Farmers
-Farmers can enter soil and environmental details (N, P, K, temperature, humidity, pH, rainfall) and receive recommendations for the most suitable crop for maximum yield and farming efficiency.
+## 🌟 Key Features & Scenarios
 
-### Scenario 2: Crop Suitability and Environmental Assessment
-Users can evaluate whether current soil and climate conditions are suitable for a particular crop, receiving insights about crop compatibility, environmental suitability, and productivity potential.
+### 🌾 Scenario 1: Smart Crop Recommendation for Farmers
+Farmers enter soil nutrients (N, P, K) and localized climate parameters (temperature, humidity, pH, rainfall). OptiCrop calculates the optimal crop with confidence scores, top-3 alternative crop suggestions, soil health diagnostics, and print-ready agricultural advisory reports.
 
-### Scenario 3: Agricultural Research and Policy Planning
-Researchers and policymakers can analyze crop-environment relationships and identify patterns in agricultural production to make data-driven decisions for sustainable farming strategies.
+### 🔍 Scenario 2: Crop Suitability & Environmental Assessment
+Farmers and agronomists evaluate whether specific land conditions are compatible with a target crop (from 22 supported varieties). The engine provides an environmental compatibility percentage, tolerance ratings (*Highly Suitable, Moderately Suitable, Marginally Suitable, Not Suitable*), and factor-by-factor gap advice.
 
-## Dataset
+### 📊 Scenario 3: Agricultural Research & Policy Planning Dashboard
+A research dashboard designed for agricultural universities and policymakers. Features interactive feature importance rankings (*Rainfall 23.0%, Humidity 22.4%, Potassium 17.5%, etc.*), correlation heatmaps, agro-climatic regional zoning recommendations, and evidence-based policy guidelines.
 
-The project uses the Crop Recommendation Dataset from Kaggle, containing 2200 samples with the following features:
-- N: Nitrogen content ratio in soil
-- P: Phosphorous content ratio in soil
-- K: Potassium content ratio in soil
-- temperature: Soil temperature in °C
-- humidity: Relative humidity in %
-- ph: Soil pH value
-- rainfall: Rainfall in mm
-- label: Crop type (22 different crops)
+### 🔐 User Management & Audit History
+* Secure User Registration & Login with PBKDF2/SHA-256 password hashing.
+* Historical prediction and suitability assessment logs.
+* One-click **Export to CSV** for historical data analysis.
+* **Dataset Explorer** to search and filter through the 2,200 curated agricultural samples.
+* **User Feedback & Ratings** module.
 
-## Installation & Setup
+---
 
-### Prerequisites
-- Python 3.8 or higher
-- pip (Python package manager)
+## 🏗️ Technical Architecture & Tech Stack
 
-### Step 1: Install Dependencies
-Install all required packages using the requirements file:
+* **Presentation Layer:** Responsive HTML5, Bootstrap 5, Font Awesome, Chart.js.
+* **Application Layer:** Python 3.11, Flask Framework, Werkzeug security.
+* **Machine Learning & Data Layer:** Scikit-learn (Random Forest Classifier: **99.55% accuracy**, **99.32% 5-fold CV**), Pandas, NumPy, SciPy.
+* **Database:** SQLite relational database (`opticropt.db`).
+* **Deployment:** WSGI / Gunicorn compatible (Render, Heroku, Railway, AWS, or Local).
+
+---
+
+## 🚀 Quickstart & Installation
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/AQBAL-debug/OptiCrop-Smart-Agricultural-Optimization_deploy.git
+cd OptiCrop-Smart-Agricultural-Optimization_deploy
+```
+
+### 2. Install Dependencies
 ```bash
 pip install -r requirements.txt
 ```
 
-If you encounter any issues, you can install packages individually:
-```bash
-pip install pandas numpy scikit-learn streamlit plotly matplotlib seaborn joblib
-```
-
-### Step 2: Train the Model
-Before running the application, you need to train the machine learning model. The training script will:
-- Load and preprocess the dataset
-- Train a Random Forest Classifier
-- Save the trained model and preprocessors
-
-Run the training script:
+### 3. Verify Model Training
+Train and evaluate the Random Forest model:
 ```bash
 python train.py
 ```
 
-**Expected Output:**
-- Dataset information and statistics
-- Model accuracy (should be ~99.55%)
-- Cross-validation scores
-- Feature importance analysis
-- Model saved to `models/` directory
-
-### Step 3: Run the Application
-Once the model is trained, start the Streamlit web application:
+### 4. Run the Automated Test Suite (32 Test Cases)
 ```bash
-streamlit run app.py
+python test_suite.py
 ```
 
-Or if streamlit is not in your PATH:
+### 5. Run the Application
+Start the Flask web application:
 ```bash
-python -m streamlit run app.py
+python app.py
 ```
+Open your browser at: **`http://127.0.0.1:5000`**
 
-**The application will open in your browser at:** `http://localhost:8501`
+*(Streamlit backup app can also be run via `streamlit run app_streamlit.py`)*
 
-## Usage Guide
+---
 
-### Scenario 1: Smart Crop Recommendation
-1. Navigate to the "🌱 Smart Crop Recommendation" tab
-2. Adjust the environmental parameter sliders:
-   - Nitrogen (N): 0-140
-   - Phosphorus (P): 5-145
-   - Potassium (K): 5-205
-   - Temperature: 0-45°C
-   - Humidity: 10-100%
-   - Soil pH: 3.5-9.5
-   - Rainfall: 20-300mm
-3. Click "🔮 Get Crop Recommendation"
-4. View the recommended crop with confidence score and top 3 alternatives
-5. Review environmental factor analysis
+## 🔑 Demo Login Accounts
 
-### Scenario 2: Crop Suitability Assessment
-1. Navigate to the "🔍 Crop Suitability Assessment" tab
-2. Set environmental parameters using the sliders
-3. Select a target crop from the dropdown menu
-4. Click "🔍 Assess Suitability"
-5. View the suitability score, level, and environmental analysis
+| Role | Username / Email | Password |
+| :--- | :--- | :--- |
+| **Farmer** | `farmer` *(or `farmer@opticrop.com`)* | `password123` |
+| **Admin** | `admin` *(or `admin@opticrop.com`)* | `admin123` |
 
-### Scenario 3: Agricultural Research Dashboard
-1. Navigate to the "📊 Agricultural Research Dashboard" tab
-2. Explore three analysis tabs:
-   - **Crop Distribution**: View distribution of crop samples in the dataset
-   - **Environmental Analysis**: Analyze distributions and correlations of environmental factors
-   - **Crop-Environment Relationships**: Explore relationships between environmental factors and crops
+---
 
-## Troubleshooting
+## 🌐 Cloud Deployment Guide
 
-### "ModuleNotFoundError: No module named 'pandas'"
-```bash
-pip install pandas numpy scikit-learn
-```
+### Deploy on Render (Recommended)
+1. Fork or push this repository to GitHub.
+2. Sign in to [Render](https://render.com) and click **New Web Service**.
+3. Select your repository: `OptiCrop-Smart-Agricultural-Optimization_deploy`.
+4. Configure:
+   * **Environment:** Python 3
+   * **Build Command:** `pip install -r requirements.txt && python train.py`
+   * **Start Command:** `gunicorn app:app`
+5. Click **Deploy Web Service**.
 
-### "ModuleNotFoundError: No module named 'streamlit'"
-```bash
-pip install streamlit plotly
-```
+### Deploy on Railway / Heroku
+* A valid [`Procfile`](Procfile) is included: `web: gunicorn app:app`.
 
-### "Error loading the model"
-Ensure you have run the training script first:
-```bash
-python train.py
-```
+---
 
-### Streamlit command not found
-Use the Python module approach:
-```bash
-python -m streamlit run app.py
-```
+## 👥 Academic Credits & Team
 
-### Port 8501 already in use
-Run on a different port:
-```bash
-streamlit run app.py --server.port 8502
-```
-
-## Model Performance
-
-- **Algorithm:** Random Forest Classifier
-- **Accuracy:** 99.55%
-- **Cross-Validation Accuracy:** 99.32% (±0.85%)
-- **Dataset Size:** 2,200 samples
-- **Number of Crops:** 22 different crop types
-- **Features:** 7 environmental parameters (N, P, K, temperature, humidity, pH, rainfall)
-
-**Feature Importance (Top Factors):**
-1. Rainfall: 23.0%
-2. Humidity: 22.4%
-3. Potassium (K): 17.5%
-4. Phosphorus (P): 15.1%
-5. Nitrogen (N): 9.6%
-6. Temperature: 7.2%
-7. Soil pH: 5.1%
-
-## Deployment
-
-### Option 1: Streamlit Community Cloud (Recommended - Free)
-
-**Easiest deployment option for Streamlit apps**
-
-1. Go to [share.streamlit.io](https://share.streamlit.io)
-2. Sign up/login with your GitHub account
-3. Click "New app"
-4. Select your repository: `AQBAL-debug/OptiCrop-Smart-Agricultural-Optimization`
-5. Select branch: `main`
-6. Main file path: `app.py`
-7. Click "Deploy"
-
-**Important:** Since the dataset and model files are in `.gitignore`, you'll need to:
-- Either add them to the repository (not recommended for large files)
-- Or use Streamlit's secrets to store them
-- Or modify the app to download them on startup
-
-### Option 2: Heroku (Free Tier Available)
-
-1. Install Heroku CLI: [https://devcenter.heroku.com/articles/heroku-cli](https://devcenter.heroku.com/articles/heroku-cli)
-2. Login to Heroku:
-```bash
-heroku login
-```
-3. Create a new Heroku app:
-```bash
-heroku create opticropt-app
-```
-4. Push to Heroku:
-```bash
-git push heroku main
-```
-
-### Option 3: Render (Free Tier Available)
-
-1. Go to [render.com](https://render.com)
-2. Sign up/login
-3. Click "New +" → "Web Service"
-4. Connect your GitHub repository
-5. Configure:
-   - **Build Command:** `pip install -r requirements.txt && python train.py`
-   - **Start Command:** `streamlit run app.py --server.port $PORT`
-6. Click "Deploy Web Service"
-
-### Option 4: Local Deployment
-
-For local deployment, follow the Installation & Setup section above.
-
-## GitHub Repository
-
-The project is hosted on GitHub:
-**https://github.com/AQBAL-debug/OptiCrop-Smart-Agricultural-Optimization**
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-## License
-
-This project is open source and available for educational and research purposes.
-
-## Contact
-
-For questions or suggestions, please open an issue on GitHub.
-
-## Project Structure
-
-```
-OptiCrop/
-├── data/
-│   └── crop_recommendation.csv
-├── models/
-│   └── crop_recommendation_model.pkl
-├── src/
-│   ├── data_preprocessing.py
-│   ├── model_training.py
-│   └── crop_recommendation.py
-├── app.py
-├── requirements.txt
-└── README.md
-```
-
-## Model Performance
-
-The system uses a Random Forest Classifier with cross-validation, achieving high accuracy in crop recommendations based on soil and environmental parameters.
+* **Curriculum:** APSCHE Technical Engineering Project 2025-2026
+* **Team Lead:** Shaik Husamuddin
+* **Members:** Mohammad Aqball, Nama Akhila, Peruboina Lakshmi Meghana, Madugula SudheerBabu

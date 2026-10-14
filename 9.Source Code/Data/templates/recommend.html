@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+
+{% block title %}Scenario 1: Smart Crop Recommendation - OptiCrop{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center flex-wrap mb-4">
+        <div>
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill mb-1">
+                <i class="fa-solid fa-wheat-awn me-1"></i> Scenario 1
+            </span>
+            <h2 class="fw-bold mb-1">Smart Crop Recommendation for Farmers</h2>
+            <p class="text-muted mb-0">Enter soil nutrient levels and localized climatic conditions to get optimal crop recommendations.</p>
+        </div>
+        <div class="mt-2 mt-md-0">
+            <span class="text-muted small me-2"><i class="fa-solid fa-wand-magic-sparkles text-warning me-1"></i> Quick Presets:</span>
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-outline-secondary" onclick="applyPreset('rice')">Rice</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="applyPreset('cotton')">Cotton</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="applyPreset('coffee')">Coffee</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="applyPreset('apple')">Apple</button>
+                <button type="button" class="btn btn-outline-secondary" onclick="applyPreset('chickpea')">Chickpea</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Input Form -->
+        <div class="col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4">
+                <h5 class="fw-bold mb-3 d-flex align-items-center text-success">
+                    <i class="fa-solid fa-sliders me-2"></i> Soil & Climatic Parameters
+                </h5>
+
+                <form method="POST" action="{{ url_for('recommend') }}" id="recommendForm">
+                    <!-- Nitrogen -->
+                    <div class="param-box">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="n_input" class="form-label fw-bold mb-0">
+                                <i class="fa-solid fa-leaf text-success me-1"></i> Nitrogen (N)
+                            </label>
+                            <div class="input-group input-group-sm" style="width: 100px;">
+                                <input type="number" class="form-control text-center fw-bold" id="n_input" name="n" min="0" max="140" step="1" value="{{ inputs.n if inputs else 90 }}" required>
+                                <span class="input-group-text">ratio</span>
+                            </div>
+                        </div>
+                        <input type="range" class="form-range" id="n_range" min="0" max="140" step="1" value="{{ inputs.n if inputs else 90 }}">
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span>0 (Low)</span>
+                            <span>Range: 0 - 140</span>
+                            <span>140 (High)</span>
+                        </div>
+                    </div>
+
+                    <!-- Phosphorus -->
+                    <div class="param-box">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="p_input" class="form-label fw-bold mb-0">
+                                <i class="fa-solid fa-flask text-primary me-1"></i> Phosphorus (P)
+                            </label>
+                            <div class="input-group input-group-sm" style="width: 100px;">
+                                <input type="number" class="form-control text-center fw-bold" id="p_input" name="p" min="5" max="145" step="1" value="{{ inputs.p if inputs else 42 }}" required>
+                                <span class="input-group-text">ratio</span>
+                            </div>
+                        </div>
+                        <input type="range" class="form-range" id="p_range" min="5" max="145" step="1" value="{{ inputs.p if inputs else 42 }}">
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span>5 (Low)</span>
+                            <span>Range: 5 - 145</span>
+                            <span>145 (High)</span>
+                        </div>
+                    </div>
+
+                    <!-- Potassium -->
+                    <div class="param-box">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="k_input" class="form-label fw-bold mb-0">
+                                <i class="fa-solid fa-vial text-warning me-1"></i> Potassium (K)
+                            </label>
+                            <div class="input-group input-group-sm" style="width: 100px;">
+                                <input type="number" class="form-control text-center fw-bold" id="k_input" name="k" min="5" max="205" step="1" value="{{ inputs.k if inputs else 43 }}" required>
+                                <span class="input-group-text">ratio</span>
+                            </div>
+                        </div>
+                        <input type="range" class="form-range" id="k_range" min="5" max="205" step="1" value="{{ inputs.k if inputs else 43 }}">
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span>5 (Low)</span>
+                            <span>Range: 5 - 205</span>
+                            <span>205 (High)</span>
+                        </div>
+                    </div>
+
+                    <!-- Temperature -->
+                    <div class="param-box">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="temp_input" class="form-label fw-bold mb-0">
+                                <i class="fa-solid fa-temperature-half text-danger me-1"></i> Soil Temperature (°C)
+                            </label>
+                            <div class="input-group input-group-sm" style="width: 110px;">
+                                <input type="number" class="form-control text-center fw-bold" id="temp_input" name="temperature" min="0" max="45" step="0.1" value="{{ inputs.temperature if inputs else 20.88 }}" required>
+                                <span class="input-group-text">°C</span>
+                            </div>
+                        </div>
+                        <input type="range" class="form-range" id="temp_range" min="0" max="45" step="0.1" value="{{ inputs.temperature if inputs else 20.88 }}">
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span>0°C (Cold)</span>
+                            <span>Range: 0 - 45°C</span>
+                            <span>45°C (Hot)</span>
+                        </div>
+                    </div>
+
+                    <!-- Humidity -->
+                    <div class="param-box">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="humidity_input" class="form-label fw-bold mb-0">
+                                <i class="fa-solid fa-droplet text-info me-1"></i> Relative Humidity (%)
+                            </label>
+                            <div class="input-group input-group-sm" style="width: 100px;">
+                                <input type="number" class="form-control text-center fw-bold" id="humidity_input" name="humidity" min="10" max="100" step="0.1" value="{{ inputs.humidity if inputs else 82.00 }}" required>
+                                <span class="input-group-text">%</span>
+                            </div>
+                        </div>
+                        <input type="range" class="form-range" id="humidity_range" min="10" max="100" step="0.1" value="{{ inputs.humidity if inputs else 82.00 }}">
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span>10% (Dry)</span>
+                            <span>Range: 10 - 100%</span>
+                            <span>100% (Humid)</span>
+                        </div>
+                    </div>
+
+                    <!-- Soil pH -->
+                    <div class="param-box">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="ph_input" class="form-label fw-bold mb-0">
+                                <i class="fa-solid fa-scale-balanced text-secondary me-1"></i> Soil pH
+                            </label>
+                            <div class="input-group input-group-sm" style="width: 100px;">
+                                <input type="number" class="form-control text-center fw-bold" id="ph_input" name="ph" min="3.5" max="9.5" step="0.1" value="{{ inputs.ph if inputs else 6.50 }}" required>
+                                <span class="input-group-text">pH</span>
+                            </div>
+                        </div>
+                        <input type="range" class="form-range" id="ph_range" min="3.5" max="9.5" step="0.1" value="{{ inputs.ph if inputs else 6.50 }}">
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span>3.5 (Acidic)</span>
+                            <span>Neutral: 6.5 - 7.5</span>
+                            <span>9.5 (Alkaline)</span>
+                        </div>
+                    </div>
+
+                    <!-- Rainfall -->
+                    <div class="param-box">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label for="rainfall_input" class="form-label fw-bold mb-0">
+                                <i class="fa-solid fa-cloud-showers-heavy text-primary me-1"></i> Rainfall (mm)
+                            </label>
+                            <div class="input-group input-group-sm" style="width: 110px;">
+                                <input type="number" class="form-control text-center fw-bold" id="rainfall_input" name="rainfall" min="20" max="300" step="0.1" value="{{ inputs.rainfall if inputs else 202.94 }}" required>
+                                <span class="input-group-text">mm</span>
+                            </div>
+                        </div>
+                        <input type="range" class="form-range" id="rainfall_range" min="20" max="300" step="0.1" value="{{ inputs.rainfall if inputs else 202.94 }}">
+                        <div class="d-flex justify-content-between text-muted small">
+                            <span>20mm (Low)</span>
+                            <span>Range: 20 - 300 mm</span>
+                            <span>300mm (High)</span>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-warning btn-lg w-100 rounded-pill fw-bold text-dark shadow mt-2">
+                        <i class="fa-solid fa-wand-magic-sparkles me-2"></i> Generate Crop Recommendation
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Result Column -->
+        <div class="col-lg-6">
+            {% if result %}
+                <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-success px-3 py-2 rounded-pill">
+                            <i class="fa-solid fa-check-circle me-1"></i> Recommendation Ready
+                        </span>
+                        {% if pred_id %}
+                            <a href="{{ url_for('view_report', pred_id=pred_id) }}" class="btn btn-sm btn-outline-success rounded-pill" target="_blank">
+                                <i class="fa-solid fa-print me-1"></i> View Printable Report
+                            </a>
+                        {% endif %}
+                    </div>
+
+                    <!-- Recommended Crop Highlight Box -->
+                    <div class="text-center p-4 rounded-4 mb-4" style="background: linear-gradient(135deg, #1b4d2e 0%, #2e8b57 100%); color: white;">
+                        <span class="text-uppercase small tracking-wide text-warning fw-semibold">Primary Recommendation</span>
+                        <h1 class="display-5 fw-extrabold text-uppercase my-2">{{ result.recommended_crop }}</h1>
+                        <div class="d-inline-flex align-items-center bg-white text-dark px-3 py-1 rounded-pill small fw-bold shadow-sm">
+                            <i class="fa-solid fa-chart-pie text-success me-2"></i> Model Confidence: {{ "%.1f"|format(result.confidence * 100) }}%
+                        </div>
+                        <div class="progress mt-3 bg-black bg-opacity-25" style="height: 10px;">
+                            <div class="progress-bar bg-warning progress-bar-striped progress-bar-animated" role="progressbar" style="width: {{ result.confidence * 100 }}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Top 3 Alternative Options -->
+                    <h6 class="fw-bold text-muted text-uppercase small mb-3">
+                        <i class="fa-solid fa-list-ol me-1 text-primary"></i> Top Alternative Crop Matches
+                    </h6>
+                    <div class="row g-2 mb-4">
+                        {% for item in result.top_3_recommendations %}
+                            <div class="col-4">
+                                <div class="p-3 text-center rounded-3 border bg-light">
+                                    <div class="fw-bold text-capitalize text-dark mb-1">{{ item.crop }}</div>
+                                    <span class="badge bg-secondary rounded-pill font-monospace">
+                                        {{ "%.1f"|format(item.probability * 100) }}%
+                                    </span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Environmental Factor Health Breakdown -->
+                    <h6 class="fw-bold text-muted text-uppercase small mb-2">
+                        <i class="fa-solid fa-notes-medical me-1 text-danger"></i> Environmental Factor Diagnostics
+                    </h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle table-hover border rounded-3 mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Factor</th>
+                                    <th>Observed Value</th>
+                                    <th>Agronomic Status & Guidance</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for factor, data in analysis.items() %}
+                                    <tr>
+                                        <td class="fw-semibold text-capitalize">{{ factor }}</td>
+                                        <td class="font-monospace fw-bold">{{ data.value }}</td>
+                                        <td>
+                                            <span class="small {% if 'Optimal' in data.status or 'Neutral' in data.status or 'Ideal' in data.status or 'Moderate' in data.status %}text-success{% elif 'High' in data.status %}text-warning{% else %}text-danger{% endif %}">
+                                                {{ data.status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white h-100 d-flex flex-column justify-content-center align-items-center">
+                    <div class="p-4 rounded-circle bg-light mb-3 text-success fs-1">
+                        <i class="fa-solid fa-wheat-awn"></i>
+                    </div>
+                    <h4 class="fw-bold text-dark mb-2">No Recommendation Generated Yet</h4>
+                    <p class="text-muted small mx-auto" style="max-width: 380px;">
+                        Adjust the environmental sliders on the left or click any of the quick preset buttons (Rice, Cotton, Coffee, Apple, Chickpea), then press <strong>Generate Crop Recommendation</strong>.
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

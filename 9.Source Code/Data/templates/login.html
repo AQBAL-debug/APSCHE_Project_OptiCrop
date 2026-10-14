@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In - OptiCrop{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex p-3 bg-success-subtle rounded-circle text-success fs-3 mb-2">
+                        <i class="fa-solid fa-seedling"></i>
+                    </div>
+                    <h3 class="fw-bold mb-1">Welcome to OptiCrop</h3>
+                    <p class="text-muted small">Sign in to your account to save predictions and view history.</p>
+                </div>
+
+                <form method="POST" action="{{ url_for('login') }}">
+                    <div class="mb-3">
+                        <label for="username_or_email" class="form-label fw-semibold">Email or Username</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-user text-muted"></i></span>
+                            <input type="text" class="form-control border-start-0" id="username_or_email" name="username_or_email" placeholder="farmer@opticrop.com" required autofocus>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="password" class="form-label fw-semibold">Password</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-lock text-muted"></i></span>
+                            <input type="password" class="form-control border-start-0" id="password" name="password" placeholder="••••••••" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-warning btn-lg w-100 rounded-pill fw-bold text-dark shadow-sm mb-3">
+                        <i class="fa-solid fa-right-to-bracket me-2"></i> Sign In
+                    </button>
+
+                    <div class="p-3 bg-light rounded-3 small text-muted text-center mb-3">
+                        <span class="fw-bold text-dark d-block mb-1">Demo Credentials:</span>
+                        Farmer: <code>farmer</code> / <code>password123</code><br>
+                        Admin: <code>admin</code> / <code>admin123</code>
+                    </div>
+
+                    <div class="text-center small">
+                        Don't have an account? <a href="{{ url_for('register') }}" class="text-success fw-bold text-decoration-none">Register here</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,232 @@
+{% extends 'base.html' %}
+
+{% block title %}OptiCrop - Smart Agricultural Production Optimization Engine{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section text-center">
+    <div class="container py-4">
+        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-3 shadow-sm">
+            <i class="fa-solid fa-wand-magic-sparkles me-1"></i> AI-Driven Precision Agriculture
+        </span>
+        <h1 class="display-4 fw-extrabold text-white mb-3">
+            Smart Agricultural Production<br><span class="text-warning">Optimization Engine</span>
+        </h1>
+        <p class="lead text-light mx-auto mb-4" style="max-width: 800px; opacity: 0.95;">
+            Harnessing Machine Learning, soil nutrient profiles (N, P, K), and climatic parameters to deliver high-confidence crop recommendations, environmental suitability assessments, and evidence-based policy insights.
+        </p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{{ url_for('recommend') }}" class="btn btn-warning btn-lg px-4 py-2 rounded-pill fw-bold text-dark shadow">
+                <i class="fa-solid fa-seedling me-2"></i> Get Crop Recommendation
+            </a>
+            <a href="{{ url_for('suitability') }}" class="btn btn-outline-light btn-lg px-4 py-2 rounded-pill fw-medium">
+                <i class="fa-solid fa-magnifying-glass-chart me-2"></i> Assess Crop Suitability
+            </a>
+            <a href="{{ url_for('research') }}" class="btn btn-success btn-lg px-4 py-2 rounded-pill fw-medium shadow">
+                <i class="fa-solid fa-chart-pie me-2"></i> Research Dashboard
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- KPI Stats Section -->
+<section class="container mt-n4" style="margin-top: -2rem;">
+    <div class="row g-3">
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">Model Accuracy</span>
+                    <h3 class="fw-bold text-success mb-0">99.55%</h3>
+                    <small class="text-muted">Cross-Val: 99.32%</small>
+                </div>
+                <div class="fs-1 text-success opacity-50"><i class="fa-solid fa-bullseye"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card d-flex align-items-center justify-content-between" style="border-left-color: #3b82f6;">
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">Crops Supported</span>
+                    <h3 class="fw-bold text-primary mb-0">22 Crops</h3>
+                    <small class="text-muted">Grains, Pulses, Fruits</small>
+                </div>
+                <div class="fs-1 text-primary opacity-50"><i class="fa-solid fa-wheat-awn"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card d-flex align-items-center justify-content-between" style="border-left-color: #f59e0b;">
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">Environmental Factors</span>
+                    <h3 class="fw-bold text-warning mb-0">7 Parameters</h3>
+                    <small class="text-muted">N, P, K, T, Hum, pH, Rain</small>
+                </div>
+                <div class="fs-1 text-warning opacity-50"><i class="fa-solid fa-flask-vial"></i></div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6">
+            <div class="stat-card d-flex align-items-center justify-content-between" style="border-left-color: #10b981;">
+                <div>
+                    <span class="text-muted small text-uppercase fw-semibold">Dataset Size</span>
+                    <h3 class="fw-bold text-emerald mb-0">2,200</h3>
+                    <small class="text-muted">Curated Samples</small>
+                </div>
+                <div class="fs-1 text-success opacity-50"><i class="fa-solid fa-table"></i></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 3 Core Scenarios Section -->
+<section class="container my-5">
+    <div class="text-center mb-5">
+        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-1 rounded-pill mb-2">Key Functionalities</span>
+        <h2 class="fw-bold">OptiCrop Three Core Scenarios</h2>
+        <p class="text-muted mx-auto" style="max-width: 650px;">
+            Engineered to cater to farmers, agricultural scientists, extension officers, and regional agricultural policymakers.
+        </p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Scenario 1 -->
+        <div class="col-lg-4 col-md-6">
+            <div class="feature-card h-100 p-4 d-flex flex-column">
+                <div class="rounded-circle bg-success-subtle d-inline-flex align-items-center justify-content-center mb-3" style="width: 56px; height: 56px;">
+                    <i class="fa-solid fa-seedling text-success fs-4"></i>
+                </div>
+                <span class="badge bg-success-subtle text-success w-auto align-self-start mb-2">Scenario 1</span>
+                <h4 class="fw-bold mb-2">Smart Crop Recommendation for Farmers</h4>
+                <p class="text-muted flex-grow-1">
+                    Farmers enter soil chemistry (N, P, K) and localized climate indicators. OptiCrop predicts the highest-yielding crop with confidence scores and top alternative recommendations.
+                </p>
+                <div class="mt-3">
+                    <a href="{{ url_for('recommend') }}" class="btn btn-outline-success w-100 rounded-pill">
+                        Launch Crop Recommender <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scenario 2 -->
+        <div class="col-lg-4 col-md-6">
+            <div class="feature-card h-100 p-4 d-flex flex-column">
+                <div class="rounded-circle bg-primary-subtle d-inline-flex align-items-center justify-content-center mb-3" style="width: 56px; height: 56px;">
+                    <i class="fa-solid fa-magnifying-glass-chart text-primary fs-4"></i>
+                </div>
+                <span class="badge bg-primary-subtle text-primary w-auto align-self-start mb-2">Scenario 2</span>
+                <h4 class="fw-bold mb-2">Crop Suitability & Environmental Assessment</h4>
+                <p class="text-muted flex-grow-1">
+                    Evaluate whether your specific field conditions are suitable for a desired crop. Get a quantitative compatibility score, factor-by-factor gap diagnostics, and soil conditioning advice.
+                </p>
+                <div class="mt-3">
+                    <a href="{{ url_for('suitability') }}" class="btn btn-outline-primary w-100 rounded-pill">
+                        Assess Specific Crop <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scenario 3 -->
+        <div class="col-lg-4 col-md-6">
+            <div class="feature-card h-100 p-4 d-flex flex-column">
+                <div class="rounded-circle bg-warning-subtle d-inline-flex align-items-center justify-content-center mb-3" style="width: 56px; height: 56px;">
+                    <i class="fa-solid fa-chart-line text-warning fs-4"></i>
+                </div>
+                <span class="badge bg-warning-subtle text-dark w-auto align-self-start mb-2">Scenario 3</span>
+                <h4 class="fw-bold mb-2">Agricultural Research & Policy Planning</h4>
+                <p class="text-muted flex-grow-1">
+                    Explore crop-climate interactions, correlation heatmaps, feature importance rankings, and regional zoning insights to inform sustainable policies and resource allocation.
+                </p>
+                <div class="mt-3">
+                    <a href="{{ url_for('research') }}" class="btn btn-outline-warning text-dark w-100 rounded-pill">
+                        Open Research Dashboard <i class="fa-solid fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Technical Architecture & Epics -->
+<section class="bg-white py-5 border-top border-bottom">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <span class="badge bg-secondary mb-2">Architecture & Methodology</span>
+                <h2 class="fw-bold">Robust 3-Tier Enterprise Architecture</h2>
+                <p class="text-muted">
+                    Engineered according to modern software development standards using an Agile Scrum delivery framework across 9 Epics and 25 verified Tasks.
+                </p>
+                <ul class="list-unstyled">
+                    <li class="d-flex align-items-start mb-3">
+                        <i class="fa-solid fa-circle-check text-success mt-1 me-3 fs-5"></i>
+                        <div>
+                            <strong>Presentation Layer:</strong> Responsive HTML5, Bootstrap 5, interactive SVG visualizations, and dynamic parameter range controllers.
+                        </div>
+                    </li>
+                    <li class="d-flex align-items-start mb-3">
+                        <i class="fa-solid fa-circle-check text-success mt-1 me-3 fs-5"></i>
+                        <div>
+                            <strong>Application Layer:</strong> High-performance Python Flask backend with input validation, secure session handling, and RESTful prediction endpoints.
+                        </div>
+                    </li>
+                    <li class="d-flex align-items-start mb-3">
+                        <i class="fa-solid fa-circle-check text-success mt-1 me-3 fs-5"></i>
+                        <div>
+                            <strong>Data & Machine Learning Layer:</strong> Random Forest Classifier (99.55% accuracy) with StandardScaler pipelines and persistent SQLite transactional database.
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm p-4 bg-light rounded-4">
+                    <h5 class="fw-bold mb-3"><i class="fa-solid fa-microchip text-primary me-2"></i> Technology Stack</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted"><i class="fa-brands fa-python text-primary me-2"></i>Backend:</td>
+                                    <td class="fw-semibold">Python 3.11, Flask Framework</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><i class="fa-solid fa-brain text-success me-2"></i>ML Model:</td>
+                                    <td class="fw-semibold">Scikit-learn (Random Forest Classifier)</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><i class="fa-solid fa-table-columns text-info me-2"></i>Data Processing:</td>
+                                    <td class="fw-semibold">Pandas, NumPy, SciPy</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><i class="fa-solid fa-chart-column text-warning me-2"></i>Visualizations:</td>
+                                    <td class="fw-semibold">Chart.js, Matplotlib, Seaborn</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><i class="fa-solid fa-database text-secondary me-2"></i>Database:</td>
+                                    <td class="fw-semibold">SQLite (Relational Storage)</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted"><i class="fa-brands fa-bootstrap text-purple me-2"></i>Frontend:</td>
+                                    <td class="fw-semibold">HTML5, CSS3, Bootstrap 5, JavaScript</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Call to Action -->
+<section class="container py-5 text-center">
+    <div class="card border-0 rounded-4 p-5 text-white bg-forest shadow">
+        <h2 class="display-6 fw-bold mb-3">Ready to Optimize Your Agricultural Output?</h2>
+        <p class="lead mb-4 mx-auto" style="max-width: 600px; opacity: 0.9;">
+            Experience data-driven farming decisions with real-time soil & weather intelligence today.
+        </p>
+        <div>
+            <a href="{{ url_for('recommend') }}" class="btn btn-warning btn-lg rounded-pill px-5 fw-bold text-dark shadow">
+                Start Crop Recommendation Now <i class="fa-solid fa-arrow-right ms-2"></i>
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
